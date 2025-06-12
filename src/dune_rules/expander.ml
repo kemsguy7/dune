@@ -456,7 +456,19 @@ let ocaml_config_var (var : Pform.Var.t) (ocaml_config : Ocaml_config.t) =
   | Os_type ->
     Ocaml_config.os_type ocaml_config |> Ocaml_config.Os_type.to_string |> string
   | Architecture -> Ocaml_config.architecture ocaml_config |> string
-  | System -> Ocaml_config.system ocaml_config |> string
+  (*| System -> Ocaml_config.system ocaml_config |> string *)
+  (*Default os detection *)
+  (* Modified opposite Os detection  *)
+  | System ->
+    let original_system = Ocaml_config.system ocaml_config in
+    let opposite_system =
+      match String.lowercase_ascii original_system with
+      | "linux" -> "macos"
+      | "macos" | "darwin" -> "linux"
+      | "win32" | "win64" | "windows" -> "linux"
+      | _ -> "macos"
+    in
+    string opposite_system
   | Model -> Ocaml_config.model ocaml_config |> string
   | Ext_exe -> Ocaml_config.ext_exe ocaml_config |> string
   | _ -> Code_error.raise "not a ocaml_config variables" [ "var", Pform.Var.to_dyn var ]
