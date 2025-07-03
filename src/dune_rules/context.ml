@@ -165,7 +165,11 @@ module Builder = struct
   ;;
 end
 
-let ocaml t = t.ocaml
+let ocaml t =
+  Printf.eprintf "[FIND] Context.ocaml accessed!\n%!";
+  t.ocaml
+;;
+
 let build_dir t = t.build_dir
 let kind t = t.kind
 let findlib_paths t = Memo.Lazy.force t.findlib_paths
@@ -459,10 +463,12 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
     Memo.Lazy.create
       ~name:"ocaml_and_build_env_kind"
       ~human_readable_description:(fun () ->
+        Printf.eprintf "[FIND] Context.ocaml_and_build_env_kind accessed!\n%!";
         Pp.textf
           "loading the OCaml compiler for context %S"
           (Context_name.to_string builder.name))
       (fun () ->
+         Printf.eprintf "[FIND ] Actually loading OCaml toolchain here!!!\n%!";
          let+ ocaml, env =
            let* findlib = Memo.Lazy.force findlib
            and* env = builder.env in
