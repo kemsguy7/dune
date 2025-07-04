@@ -166,7 +166,9 @@ module Builder = struct
 end
 
 let ocaml t =
-  Printf.eprintf "[FIND] Context.ocaml accessed!\n%!";
+  Printf.eprintf
+    "[FIND] Context.ocaml accessed from:\n%s\n%!"
+    (Printexc.get_callstack 5 |> Printexc.raw_backtrace_to_string);
   t.ocaml
 ;;
 
