@@ -16,6 +16,39 @@ type t =
   ; ocaml_version : Ocaml.Version.t
   }
 
+(* DEBUG INSTRUMENTATION - Track which fields are accessed *)
+let debug_access field_name value =
+  Printf.eprintf "[FIELD] lib_config.%s accessed!\n%!" field_name;
+  value
+;;
+
+(* Debug wrapper functions for each field *)
+[@@@warning "-32"] (* I'm disabling unused variable warning for this section *)
+
+let get_has_native t = debug_access "has_native" t.has_native
+let get_ext_lib t = debug_access "ext_lib" t.ext_lib
+let get_ext_obj t = debug_access "ext_obj" t.ext_obj
+let get_os_type t = debug_access "os_type" t.os_type
+let get_architecture t = debug_access "architecture" t.architecture
+let get_system t = debug_access "system" t.system
+let get_model t = debug_access "model" t.model
+
+let get_natdynlink_supported t =
+  debug_access "natdynlink_supported" t.natdynlink_supported
+;;
+
+let get_ext_dll t = debug_access "ext_dll" t.ext_dll
+let get_stdlib_dir t = debug_access "stdlib_dir" t.stdlib_dir
+let get_ccomp_type t = debug_access "ccomp_type" t.ccomp_type
+
+let get_ocaml_version_string t =
+  debug_access "ocaml_version_string" t.ocaml_version_string
+;;
+
+let get_ocaml_version t = debug_access "ocaml_version" t.ocaml_version
+
+[@@@warning "+32"] (* Re-enable unused value warnings *)
+
 let allowed_in_enabled_if =
   [ "architecture", (1, 0)
   ; "system", (1, 0)
@@ -28,12 +61,13 @@ let allowed_in_enabled_if =
 
 let get_for_enabled_if t (pform : Pform.t) =
   match pform with
-  | Var Architecture -> t.architecture
-  | Var System -> t.system
-  | Var Model -> t.model
-  | Var Os_type -> Ocaml_config.Os_type.to_string t.os_type
-  | Var Ccomp_type -> Ocaml_config.Ccomp_type.to_string t.ccomp_type
-  | Var Ocaml_version -> t.ocaml_version_string
+  | Var Architecture -> debug_access "architecture" t.architecture
+  | Var System -> debug_access "system" t.system
+  | Var Model -> debug_access "model" t.model
+  | Var Os_type -> debug_access "os_type" (Ocaml_config.Os_type.to_string t.os_type)
+  | Var Ccomp_type ->
+    debug_access "ccomp_type" (Ocaml_config.Ccomp_type.to_string t.ccomp_type)
+  | Var Ocaml_version -> debug_access "ocaml_version_string" t.ocaml_version_string
   | _ ->
     Code_error.raise
       "Lib_config.get_for_enabled_if: var not allowed"
@@ -41,7 +75,7 @@ let get_for_enabled_if t (pform : Pform.t) =
 ;;
 
 let linker_can_create_empty_archives t =
-  match t.ccomp_type with
+  match debug_access "ccomp_type" t.ccomp_type with
   | Msvc -> false
   | Cc | Other _ -> true
 ;;
@@ -51,12 +85,14 @@ let equal = Poly.equal
 let to_dyn = Dyn.opaque
 
 let cc_g t =
-  match t.ccomp_type with
+  match debug_access "ccomp_type" t.ccomp_type with
   | Msvc -> []
   | Cc | Other _ -> [ "-g" ]
 ;;
 
 let create ocaml_config ~ocamlopt =
+  Printf.eprintf
+    "[FIELD] lib_config.create called - creating lib_config from ocaml_config\n%!";
   { has_native = Result.is_ok ocamlopt
   ; ext_obj = Ocaml_config.ext_obj ocaml_config
   ; ext_lib = Ocaml_config.ext_lib ocaml_config
