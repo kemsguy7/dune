@@ -104,6 +104,7 @@ end = struct
         let name = Lib_info.name lib in
         let files = Foreign_sources.for_lib foreign_sources ~name in
         let { Lib_config.ext_obj; _ } = lib_config in
+        let ext_obj = Lib_config.ext_obj lib_config in
         Foreign.Sources.object_files files ~dir ~ext_obj
     in
     List.rev_append

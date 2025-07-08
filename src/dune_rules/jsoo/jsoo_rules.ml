@@ -661,7 +661,7 @@ let setup_separate_compilation_rules sctx components =
              ocaml.lib_config
            in
            let archive =
-             let stdlib_dir = lib_config.stdlib_dir in
+             let stdlib_dir = Lib_config.stdlib_dir lib_config in
              Path.relative stdlib_dir
            in
            archive "stdlib.cma" :: archive "std_exit.cmo" :: archives

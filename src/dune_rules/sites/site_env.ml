@@ -20,7 +20,7 @@ let add_packages_env context ~base stanzas packages =
     let+ default_ocamlpath = Context.default_ocamlpath context in
     Env.extend_env
       base
-      (dune_sites_env ~default_ocamlpath ~stdlib:ocaml.lib_config.stdlib_dir)
+      (dune_sites_env ~default_ocamlpath ~stdlib:(Lib_config.stdlib_dir ocaml.lib_config))
   in
   let+ env_dune_dir_locations =
     let init =

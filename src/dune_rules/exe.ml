@@ -113,8 +113,8 @@ module Linkage = struct
         Executables.Link_mode.extension
           m
           ~loc
-          ~ext_obj:lib_config.ext_obj
-          ~ext_dll:lib_config.ext_dll
+          ~ext_obj:(Lib_config.ext_obj lib_config)
+          ~ext_dll:(Lib_config.ext_dll lib_config)
       in
       let flags =
         match m with
@@ -326,7 +326,7 @@ let link_many
           ~obj_dir
           ~modules
           ~top_sorted_modules
-          ~ext_obj:ocaml.lib_config.ext_obj
+          ~ext_obj:(Lib_config.ext_obj lib_config)
           ()
       in
       let+ () =

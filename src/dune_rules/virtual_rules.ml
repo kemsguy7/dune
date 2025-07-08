@@ -11,7 +11,7 @@ let setup_copy_rules_for_impl ~sctx ~dir vimpl =
   let copy_to_obj_dir ~src ~dst =
     add_rule ~loc:(Loc.of_pos __POS__) (Action_builder.symlink ~src ~dst)
   in
-  let* { Lib_config.has_native; ext_obj; _ } =
+  let* lib_config =
     let+ ocaml = Context.ocaml ctx in
     ocaml.lib_config
   in

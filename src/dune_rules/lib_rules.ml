@@ -52,7 +52,7 @@ let build_lib
   =
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
-  let map_cclibs = cclibs ocaml.lib_config.ccomp_type ~flag:"-cclib" in
+  let map_cclibs = cclibs (Lib_config.ccomp_type ocaml.lib_config) ~flag:"-cclib" in
   Ocaml_toolchain.compiler ocaml mode
   |> Memo.Result.iter ~f:(fun compiler ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml mode))
@@ -108,7 +108,7 @@ let build_lib
     ; Deps
         (Foreign.Objects.build_paths
            lib.buildable.extra_objects
-           ~ext_obj:ocaml.lib_config.ext_obj
+           ~ext_obj:(Lib_config.ext_obj ocaml.lib_config)
            ~dir)
     ]
     |> Command.run (Ok compiler) ~dir:(Path.build (Context.build_dir ctx))
@@ -162,10 +162,13 @@ let ocamlmklib
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
   let build =
-    let cclibs =
+    (* let cclibs =
       Action_builder.map
         c_library_flags
-        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt")
+        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt") *)
+    let cclibs =
+      let ccomp_type = Lib_config.ccomp_type ocaml.lib_config in
+      Action_builder.map c_library_flags ~f:(cclibs ccomp_type ~flag:"-ldopt")
     in
     fun ~custom ~sandbox targets ->
       let open Action_builder.With_targets.O in

@@ -212,7 +212,7 @@ let build_c_program
   let include_args =
     let open Action_builder.O in
     let* ocaml = Action_builder.of_memo ocaml in
-    let ocaml_where = ocaml.lib_config.stdlib_dir in
+    let ocaml_where = Lib_config.stdlib_dir ocaml.lib_config in
     (* XXX: need glob dependency *)
     let open Action_builder.O in
     let ctypes = Lib_name.of_string "ctypes" in
@@ -375,6 +375,7 @@ let gen_rules ~cctx ~(buildable : Buildable.t) ~loc ~scope ~dir ~sctx =
     let* () =
       let foreign_archives_deps =
         let { Lib_config.ext_lib; ext_dll; _ } =
+          let ocaml_where = Lib_config.stdlib_dir ocaml.lib_config in
           (Compilation_context.ocaml cctx).lib_config
         in
         List.concat_map buildable.foreign_archives ~f:(fun (_loc, archive) ->

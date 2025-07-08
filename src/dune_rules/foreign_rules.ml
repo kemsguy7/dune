@@ -289,7 +289,7 @@ let build_c
       foreign_flags sctx ~dir ~expander ~flags ~language:kind
   in
   let output_param =
-    match ocaml.lib_config.ccomp_type with
+    match Lib_config.ccomp_type ocaml.lib_config with
     | Msvc -> [ Command.Args.Concat ("", [ A "/Fo"; Target dst ]) ]
     | Cc | Other _ -> [ A "-o"; Target dst ]
   in
@@ -312,7 +312,7 @@ let build_c
        ~dir:(Path.build dir)
        c_compiler
        ([ Command.Args.dyn with_user_and_std_flags
-        ; S [ A "-I"; Path ocaml.lib_config.stdlib_dir ]
+        ; S [ A "-I"; Path lib_config.stdlib_dir ]
         ; include_flags
         ]
         @ output_param
