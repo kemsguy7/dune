@@ -69,7 +69,7 @@ module Link_params = struct
            Path.extend_basename obj_name ~suffix:(Cm_kind.ext Cmo) :: hidden_deps
          | Native ->
            Path.extend_basename obj_name ~suffix:(Cm_kind.ext Cmx)
-           :: Path.extend_basename obj_name ~suffix:lib_config.ext_obj
+           :: Path.extend_basename obj_name ~suffix:(Lib_config.ext_obj lib_config)
            :: hidden_deps)
     in
     { deps; hidden_deps; include_dirs }
@@ -95,7 +95,7 @@ module L = struct
   let to_hflags dir = to_flags "-H" dir
 
   let remove_stdlib dirs (lib_config : Lib_config.t) =
-    Path.Set.remove dirs lib_config.stdlib_dir
+    Path.Set.remove dirs (Lib_config.stdlib_dir lib_config)
   ;;
 
   type mode =
@@ -274,7 +274,7 @@ module Lib_and_module = struct
                                   [ Obj_dir.Module.o_file_exn
                                       obj_dir
                                       m
-                                      ~ext_obj:lib_config.ext_obj
+                                      ~ext_obj:(Lib_config.ext_obj lib_config)
                                   ])
                            ]
                          | Byte | Byte_for_jsoo | Byte_with_stubs_statically_linked_in ->

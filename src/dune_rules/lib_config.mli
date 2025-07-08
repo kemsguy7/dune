@@ -1,6 +1,7 @@
 open Import
 
- type t =
+type t
+ (*  =
    { has_native : bool
   ; ext_lib : Filename.Extension.t
   ; ext_obj : Filename.Extension.t
@@ -14,7 +15,7 @@ open Import
   ; ccomp_type : Ocaml_config.Ccomp_type.t
   ; ocaml_version_string : string
   ; ocaml_version : Ocaml.Version.t
-  }  
+  }   *)
 
   val has_native : t -> bool
   val ext_lib : t -> Filename.Extension.t 

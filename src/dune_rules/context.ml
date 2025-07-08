@@ -512,8 +512,10 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
           ~env
         |> Build_environment_kind.findlib_paths ~findlib ~ocaml_bin:ocaml.bin_dir
       in
-      if Ocaml.Version.has_META_files ocaml.version
-      then ocaml.lib_config.stdlib_dir :: default_ocamlpath
+      if
+        Ocaml.Version.has_META_files
+          ocaml.version (* then ocaml.lib_config.stdlib_dir :: default_ocamlpath *)
+      then Lib_config.stdlib_dir ocaml.lib_config :: default_ocamlpath
       else default_ocamlpath)
   in
   let builder =

@@ -431,11 +431,12 @@ let make loc context =
 
 let lib_config_var (var : Pform.Var.t) (lib_config : Lib_config.t) =
   [ (match var with
-     | Ocaml_stdlib_dir -> Value.Dir lib_config.stdlib_dir
-     | Ext_obj -> String lib_config.ext_obj
-     | Ext_lib -> String lib_config.ext_lib
-     | Ext_dll -> String lib_config.ext_dll
-     | Ccomp_type -> String (Ocaml_config.Ccomp_type.to_string lib_config.ccomp_type)
+     | Ocaml_stdlib_dir -> Value.Dir (Lib_config.stdlib_dir lib_config)
+     | Ext_obj -> String (Lib_config.ext_obj lib_config)
+     | Ext_lib -> String (Lib_config.ext_lib lib_config)
+     | Ext_dll -> String (Lib_config.ext_dll lib_config)
+     | Ccomp_type ->
+       String (Ocaml_config.Ccomp_type.to_string (Lib_config.ccomp_type lib_config))
      | _ -> Code_error.raise "not a Lib_config.t variable" [ "var", Pform.Var.to_dyn var ])
   ]
 ;;

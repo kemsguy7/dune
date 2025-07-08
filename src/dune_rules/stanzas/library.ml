@@ -412,9 +412,12 @@ let to_lib_info
       conf
       ~expander
       ~dir
-      ~lib_config:
-        ({ Lib_config.has_native; ext_lib; ext_dll; natdynlink_supported; _ } as
-         lib_config)
+      ~lib_config: 
+        ( lib_config as 
+        let has_native = Lib_config.has_native lib_config in
+         let ext_lib = Lib_config.ext_lib lib_config in
+         let ext_dll = Lib_config.ext_dll lib_config in
+         let natdynlink_supported = Lib_config.natdynlink_supported lib_config in
   =
   let open Memo.O in
   let obj_dir = obj_dir ~dir conf in

@@ -123,7 +123,7 @@ module Conf = struct
       | Sourceroot -> Memo.return @@ Some (Path.source Path.Source.root)
       | Stdlib ->
         let+ ocaml = Context.ocaml context in
-        Some ocaml.lib_config.stdlib_dir
+        Some (Lib_config.stdlib_dir ocaml.lib_config)
     in
     let hardcoded_ocaml_path =
       let install_dir =
@@ -154,7 +154,7 @@ module Conf = struct
       | Sourceroot -> Memo.return None
       | Stdlib ->
         let+ ocaml = Context.ocaml context in
-        Some ocaml.lib_config.stdlib_dir
+        Some (Lib_config.stdlib_dir ocaml.lib_config)
     in
     let sign_hook = sign_hook_of_context context in
     { get_location; get_vcs; get_config_path; hardcoded_ocaml_path; sign_hook }

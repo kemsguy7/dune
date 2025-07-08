@@ -81,10 +81,10 @@ module DB = struct
   ;;
 
   let create ~paths ~(lib_config : Lib_config.t) =
-    let stdlib_dir = lib_config.stdlib_dir in
-    let ext_lib = lib_config.ext_lib in
+    let stdlib_dir = Lib_config.stdlib_dir lib_config in
+    let ext_lib = Lib_config.ext_lib lib_config in
     let+ builtins =
-      let version = lib_config.ocaml_version in
+      let version = Lib_config.ocaml_version lib_config in
       Meta.builtins ~stdlib_dir ~version
     in
     { stdlib_dir; paths; builtins; ext_lib }

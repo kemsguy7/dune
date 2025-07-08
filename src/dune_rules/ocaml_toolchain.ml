@@ -26,10 +26,8 @@ let make_ocaml_config ~env ~ocamlc =
   let+ vars =
     Process.run_capture_lines ~display:Quiet ~env Strict ocamlc [ "-config" ]
     |> Memo.of_reproducible_fiber
-    >>| Ocaml_config.Vars.of_lines 
+    >>| Ocaml_config.Vars.of_lines
   in
-
-
   match
     match vars with
     | Error msg -> Error (Ocaml_config.Origin.Ocamlc_config, msg)
@@ -159,7 +157,9 @@ let register_response_file_support t =
     then Result.iter ~f:set t.ocamlmklib)
 ;;
 
-let check_fdo_support { version; lib_config = { has_native; _ }; ocaml_config; _ } name =
+(* let check_fdo_support { version; lib_config = { has_native; _ }; ocaml_config; _ } name = *)
+let check_fdo_support { version; lib_config; ocaml_config; _ } name =
+  let has_native = Lib_config.has_native lib_config in
   let version_string = Ocaml_config.version_string ocaml_config in
   let err () =
     User_error.raise
