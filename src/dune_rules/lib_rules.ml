@@ -162,13 +162,10 @@ let ocamlmklib
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
   let build =
-    (* let cclibs =
+    let cclibs =
       Action_builder.map
         c_library_flags
-        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt") *)
-    let cclibs =
-      let ccomp_type = Lib_config.ccomp_type ocaml.lib_config in
-      Action_builder.map c_library_flags ~f:(cclibs ccomp_type ~flag:"-ldopt")
+        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt")
     in
     fun ~custom ~sandbox targets ->
       let open Action_builder.With_targets.O in

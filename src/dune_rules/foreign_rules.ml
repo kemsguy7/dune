@@ -310,9 +310,10 @@ let build_c
      in
      Command.run_dyn_prog
        ~dir:(Path.build dir)
+       
        c_compiler
        ([ Command.Args.dyn with_user_and_std_flags
-        ; S [ A "-I"; Path lib_config.stdlib_dir ]
+        ; S [ A "-I"; Path Lib_config.stdlib_dir  ocaml.lib_config ]
         ; include_flags
         ]
         @ output_param
@@ -359,7 +360,7 @@ let build_o_files
       let ctx = Super_context.context sctx in
       Context.ocaml ctx
     in
-    ocaml.lib_config.ext_obj
+    Lib_config.ext_obj ocaml.lib_config
   in
   Foreign.Sources.to_list_map
     foreign_sources

@@ -326,7 +326,7 @@ let link_many
           ~obj_dir
           ~modules
           ~top_sorted_modules
-          ~ext_obj:(Lib_config.ext_obj lib_config)
+          ~ext_obj:(Lib_config.ext_obj ocaml.lib_config)
           ()
       in
       let+ () =

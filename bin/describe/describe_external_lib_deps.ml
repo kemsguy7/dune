@@ -133,8 +133,8 @@ let exes_extensions (lib_config : Dune_rules.Lib_config.t) modes =
     Dune_rules.Executables.Link_mode.extension
       m
       ~loc
-      ~ext_obj:lib_config.ext_obj
-      ~ext_dll:lib_config.ext_dll)
+      ~ext_obj:(Dune_rules.Lib_config.ext_obj lib_config)
+      ~ext_dll:(Dune_rules.Lib_config.ext_dll lib_config))
 ;;
 
 let libs db (context : Context.t) =
