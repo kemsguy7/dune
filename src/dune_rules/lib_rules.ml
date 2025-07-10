@@ -52,7 +52,7 @@ let build_lib
   =
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
-  let map_cclibs = cclibs ocaml.lib_config.ccomp_type ~flag:"-cclib" in
+  let map_cclibs = cclibs (Lib_config.ccomp_type ocaml.lib_config) ~flag:"-cclib" in
   Ocaml_toolchain.compiler ocaml mode
   |> Memo.Result.iter ~f:(fun compiler ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml mode))
@@ -108,7 +108,7 @@ let build_lib
     ; Deps
         (Foreign.Objects.build_paths
            lib.buildable.extra_objects
-           ~ext_obj:ocaml.lib_config.ext_obj
+           ~ext_obj:(Lib_config.ext_obj ocaml.lib_config)
            ~dir)
     ]
     |> Command.run (Ok compiler) ~dir:(Path.build (Context.build_dir ctx))
@@ -165,7 +165,7 @@ let ocamlmklib
     let cclibs =
       Action_builder.map
         c_library_flags
-        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt")
+        ~f:(cclibs (Lib_config.ccomp_type ocaml.lib_config) ~flag:"-ldopt")
     in
     fun ~custom ~sandbox targets ->
       let open Action_builder.With_targets.O in
@@ -185,7 +185,8 @@ let ocamlmklib
       >>| Action.Full.add_sandbox sandbox
       |> Super_context.add_rule sctx ~dir ~loc
   in
-  let { Lib_config.ext_lib; ext_dll; _ } = ocaml.lib_config in
+  let ext_lib = Lib_config.ext_lib ocaml.lib_config in
+  let ext_dll = Lib_config.ext_dll ocaml.lib_config in
   let dynamic_target =
     Foreign.Archive.Name.dll_file archive_name ~dir ~ext_dll ~mode:stubs_mode
   in
@@ -235,10 +236,8 @@ let foreign_rules (library : Foreign_library.t) ~sctx ~expander ~dir ~dir_conten
   in
   let* o_files =
     let* extra_o_files =
-      let+ { Lib_config.ext_obj; _ } =
-        let+ ocaml = Super_context.context sctx |> Context.ocaml in
-        ocaml.lib_config
-      in
+      let+ ocaml = Super_context.context sctx |> Context.ocaml in
+      let ext_obj = Lib_config.ext_obj ocaml.lib_config in
       let open Action_builder.O in
       Expander.expand_and_eval_set
         expander
@@ -362,7 +361,7 @@ let build_shared (lib : Library.t) ~native_archives ~sctx ~dir ~flags =
   Memo.Result.iter ocaml.ocamlopt ~f:(fun ocamlopt ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml Native))
     ; Hidden_deps
-        (let ext_lib = ocaml.lib_config.ext_lib in
+        (let ext_lib = Lib_config.ext_lib ocaml.lib_config in
          List.rev_concat
            [ Library.foreign_lib_files lib ~dir ~ext_lib ~for_mode:(Only Byte)
            ; Library.foreign_lib_files lib ~dir ~ext_lib ~for_mode:All
@@ -403,9 +402,9 @@ let setup_build_archives (lib : Library.t) ~top_sorted_modules ~cctx ~expander ~
   let flags = Compilation_context.flags cctx in
   let modules = Compilation_context.modules cctx in
   let sctx = Compilation_context.super_context cctx in
-  let { Lib_config.ext_obj; natdynlink_supported; _ } =
-    let ocaml = Compilation_context.ocaml cctx in
-    ocaml.lib_config
+  let ext_obj = Lib_config.ext_obj (Compilation_context.ocaml cctx).lib_config in
+  let natdynlink_supported =
+    Lib_config.natdynlink_supported (Compilation_context.ocaml cctx).lib_config
   in
   let* () =
     Modules.With_vlib.exit_module modules
@@ -500,7 +499,7 @@ let cctx (lib : Library.t) ~sctx ~source_modules ~dir ~expander ~scope ~compile_
       let ctx = Super_context.context sctx in
       Context.ocaml ctx
     in
-    let { Lib_config.has_native; _ } = ocaml.lib_config in
+    let has_native = Lib_config.has_native ocaml.lib_config in
     Mode_conf.Lib.Set.eval_detailed lib.modes ~has_native
   in
   let package = Library.package lib in
@@ -611,7 +610,7 @@ let library_rules
     Merlin.make
       ~requires_compile
       ~requires_hidden
-      ~stdlib_dir:lib_config.stdlib_dir
+      ~stdlib_dir:(Lib_config.stdlib_dir lib_config)
       ~flags
       ~modules
       ~preprocess:(Preprocess.Per_module.without_instrumentation lib.buildable.preprocess)

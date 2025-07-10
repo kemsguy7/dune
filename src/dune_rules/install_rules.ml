@@ -103,7 +103,6 @@ end = struct
         let+ foreign_sources = Dir_contents.foreign_sources dir_contents in
         let name = Lib_info.name lib in
         let files = Foreign_sources.for_lib foreign_sources ~name in
-        let { Lib_config.ext_obj; _ } = lib_config in
         let ext_obj = Lib_config.ext_obj lib_config in
         Foreign.Sources.object_files files ~dir ~ext_obj
     in
@@ -253,7 +252,7 @@ end = struct
         in
         make_entry ?sub_dir Lib path)
     in
-    let { Lib_config.has_native; ext_obj; _ } = lib_config in
+    let has_native = Lib_config.has_native lib_config in
     let { Lib_mode.Map.ocaml = { Mode.Dict.byte; native } as ocaml; melange } =
       Mode_conf.Lib.Set.eval lib.modes ~has_native
     in
@@ -285,6 +284,7 @@ end = struct
       in
       let common =
         let virtual_library = Library.is_virtual lib in
+        let ext_obj = Lib_config.ext_obj lib_config in
         fun m ->
           let cm_file kind = Obj_dir.Module.cm_file obj_dir m ~kind in
           let open Lib_mode.Cm_kind in
@@ -668,10 +668,8 @@ end = struct
                actually only install them for virtual libraries. See
                [Lib_archives.make] *)
             let dir = Obj_dir.obj_dir obj_dir in
-            let* ext_obj =
-              let+ ocaml = Context.ocaml ctx in
-              ocaml.lib_config.ext_obj
-            in
+            let+ ocaml = Context.ocaml ctx in
+            let ext_obj = Lib_config.ext_obj ocaml.lib_config in
             let+ foreign_sources = Dir_contents.foreign_sources dir_contents in
             Foreign_sources.for_lib ~name foreign_sources
             |> Foreign.Sources.object_files ~dir ~ext_obj
@@ -685,6 +683,7 @@ end = struct
             >>| Modules.With_vlib.modules
           and* melange_runtime_deps = file_deps (Lib_info.melange_runtime_deps info)
           and* public_headers = file_deps (Lib_info.public_headers info) in
+          let* foreign_objects = foreign_objects in
           let+ dune_lib =
             Lib.to_dune_lib
               lib
