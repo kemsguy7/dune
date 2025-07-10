@@ -119,7 +119,7 @@ let impl sctx ~(lib : Library.t) ~scope =
            let+ foreign_objects =
              Dir_contents.foreign_sources dir_contents
              >>| Foreign_sources.for_lib ~name
-             >>| (let ext_obj = ocaml.lib_config.ext_obj in
+             >>| (let ext_obj = Lib_config.ext_obj ocaml.lib_config in
                   let dir = Obj_dir.obj_dir (Lib.Local.obj_dir vlib) in
                   Foreign.Sources.object_files ~ext_obj ~dir)
              >>| List.map ~f:Path.build
