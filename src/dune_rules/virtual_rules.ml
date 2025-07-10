@@ -15,6 +15,7 @@ let setup_copy_rules_for_impl ~sctx ~dir vimpl =
     let+ ocaml = Context.ocaml ctx in
     ocaml.lib_config
   in
+  let has_native = Lib_config.has_native lib_config in
   let { Lib_mode.Map.ocaml = { byte; native }; melange } =
     Mode_conf.Lib.Set.eval impl.modes ~has_native
   in
@@ -52,6 +53,7 @@ let setup_copy_rules_for_impl ~sctx ~dir vimpl =
       >>> Memo.when_ native (fun () ->
         copy_obj_file src (Ocaml Cmx)
         >>>
+        let ext_obj = Lib_config.ext_obj lib_config in
         let object_file dir = Obj_dir.Module.o_file_exn dir src ~ext_obj in
         copy_to_obj_dir ~src:(object_file vlib_obj_dir) ~dst:(object_file impl_obj_dir)))
   in

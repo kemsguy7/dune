@@ -310,10 +310,9 @@ let build_c
      in
      Command.run_dyn_prog
        ~dir:(Path.build dir)
-       
        c_compiler
        ([ Command.Args.dyn with_user_and_std_flags
-        ; S [ A "-I"; Path Lib_config.stdlib_dir  ocaml.lib_config ]
+        ; S [ A "-I"; Path (Lib_config.stdlib_dir ocaml.lib_config) ]
         ; include_flags
         ]
         @ output_param
