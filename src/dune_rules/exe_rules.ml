@@ -109,10 +109,11 @@ let o_files
       Foreign_sources.for_exes foreign_sources ~first_exe
     in
     let* extra_o_files =
-      let+ { Lib_config.ext_obj; _ } =
+      let+ lib_config =
         let+ ocaml = Super_context.context sctx |> Context.ocaml in
         ocaml.lib_config
       in
+      let ext_obj = Lib_config.ext_obj lib_config in
       Foreign.Objects.build_paths exes.buildable.extra_objects ~ext_obj ~dir
     in
     let+ o_files =
@@ -233,7 +234,7 @@ let executables_rules
                exes.buildable.foreign_archives
                |> List.map ~f:(fun (_, archive) ->
                  let lib =
-                   let ext_lib = lib_config.ext_lib in
+                   let ext_lib = Lib_config.ext_lib lib_config in
                    Foreign.Archive.lib_file ~archive ~dir ~ext_lib ~mode:Mode.Select.All
                  in
                  Command.Args.S [ A "-cclib"; Dep (Path.build lib) ]))
@@ -299,7 +300,7 @@ let executables_rules
     Merlin.make
       ~requires_compile
       ~requires_hidden
-      ~stdlib_dir:lib_config.stdlib_dir
+      ~stdlib_dir:(Lib_config.stdlib_dir lib_config)
       ~flags
       ~modules
       ~libname:None
