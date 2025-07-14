@@ -30,7 +30,23 @@ type t
   val ccomp_type : t -> Ocaml_config.Ccomp_type.t
   val ocaml_version_string : t ->  string
   val ocaml_version : t-> Ocaml.Version.t
- 
+
+  (* Constructor function *)
+val make 
+  : has_native:bool
+  -> ext_lib:Filename.Extension.t
+  -> ext_obj:Filename.Extension.t
+  -> os_type:Ocaml_config.Os_type.t
+  -> architecture:string
+  -> system:string
+  -> model:string
+  -> natdynlink_supported:Dynlink_supported.By_the_os.t
+  -> ext_dll:string
+  -> stdlib_dir:Path.t
+  -> ccomp_type:Ocaml_config.Ccomp_type.t
+  -> ocaml_version_string:string
+  -> ocaml_version:Ocaml.Version.t
+  -> t
 
 val allowed_in_enabled_if : (string * Dune_lang.Syntax.Version.t) list
 val get_for_enabled_if : t -> Pform.t -> string

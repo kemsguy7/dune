@@ -25,6 +25,38 @@ let debug_access field_name value =
 (* Debug wrapper functions for each field *)
 [@@@warning "-32"] (* I'm disabling unused variable warning for this section *)
 
+(* Constructor function - like a class constructor in TypeScript *)
+let make
+      ~has_native
+      ~ext_lib
+      ~ext_obj
+      ~os_type
+      ~architecture
+      ~system
+      ~model
+      ~natdynlink_supported
+      ~ext_dll
+      ~stdlib_dir
+      ~ccomp_type
+      ~ocaml_version_string
+      ~ocaml_version
+  =
+  { has_native
+  ; ext_lib
+  ; ext_obj
+  ; os_type
+  ; architecture
+  ; system
+  ; model
+  ; natdynlink_supported
+  ; ext_dll
+  ; stdlib_dir
+  ; ccomp_type
+  ; ocaml_version_string
+  ; ocaml_version
+  }
+;;
+
 let has_native t = debug_access "has_native" t.has_native
 let ext_lib t = debug_access "ext_lib" t.ext_lib
 let ext_obj t = debug_access "ext_obj" t.ext_obj
