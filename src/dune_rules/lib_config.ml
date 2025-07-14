@@ -18,7 +18,7 @@ type t =
 
 (* DEBUG INSTRUMENTATION - Track which fields are accessed *)
 let debug_access field_name value =
-  Printf.eprintf ":[FIELD] lib_config.%s accessed!\n%!" field_name;
+  Printf.printf ":[FIELD] lib_config.%s accessed!\n%!" field_name;
   value
 ;;
 

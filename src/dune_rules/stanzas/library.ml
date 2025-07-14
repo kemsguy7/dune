@@ -453,6 +453,7 @@ let to_lib_info conf ~expander ~dir ~lib_config =
   in
   let native_archives =
     let archive = archive ext_lib in
+    Printf.printf ":[FIND] Loading builtins for OCaml bbbbbbbbbbbbbbbbbBBBBBB!";
     if virtual_ || not modes.ocaml.native
     then Lib_info.Files []
     else if

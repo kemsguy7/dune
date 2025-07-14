@@ -85,6 +85,7 @@ module DB = struct
     let ext_lib = Lib_config.ext_lib lib_config in
     let+ builtins =
       let version = Lib_config.ocaml_version lib_config in
+      Printf.printf ":[FIND] Loading builtins for OCaml AAAAAAAAAAAAAAAAAAAAAA!";
       Meta.builtins ~stdlib_dir ~version
     in
     { stdlib_dir; paths; builtins; ext_lib }
