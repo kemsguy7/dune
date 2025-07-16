@@ -83,6 +83,10 @@ module Ccomp_type = struct
   ;;
 end
 
+let debug_field_access field_name =
+  Printf.eprintf "[OCAML_CONFIG_ACCESSSSSSSSSSSSED] %s accessed!\n%!" field_name
+;;
+
 type t =
   { version : int * int * int
   ; version_string : string
@@ -139,14 +143,37 @@ type t =
   }
 
 let version t = t.version
-let version_string t = t.version_string
+
+let version_string t =
+  debug_field_access "version_string";
+  t.version_string
+;;
+
 let standard_library_default t = t.standard_library_default
-let standard_library t = t.standard_library
+
+let standard_library t =
+  debug_field_access "standard_library";
+  t.standard_library
+;;
+
 let standard_runtime t = t.standard_runtime
 let ccomp_type t = t.ccomp_type
-let c_compiler t = t.c_compiler
-let ocamlc_cflags t = t.ocamlc_cflags
-let ocamlc_cppflags t = t.ocamlc_cppflags
+
+let c_compiler t =
+  debug_field_access "c_compiler";
+  t.c_compiler
+;;
+
+let ocamlc_cflags t =
+  debug_field_access "ocamlc_cflags";
+  t.ocamlc_cflags
+;;
+
+let ocamlc_cppflags t =
+  debug_field_access "ocamlc_cppflags";
+  t.ocamlc_cppflags
+;;
+
 let ocamlopt_cflags t = t.ocamlopt_cflags
 let ocamlopt_cppflags t = t.ocamlopt_cppflags
 let bytecomp_c_compiler t = t.bytecomp_c_compiler
@@ -156,19 +183,58 @@ let native_c_libraries t = t.native_c_libraries
 let native_pack_linker t = t.native_pack_linker
 let cc_profile t = t.cc_profile
 let architecture t = t.architecture
-let model t = t.model
+
+let model t =
+  debug_field_access "model";
+  t.model
+;;
+
 let int_size t = t.int_size
-let word_size t = t.word_size
-let system t = t.system
+
+let word_size t =
+  debug_field_access "word_size";
+  t.word_size
+;;
+
+let system t =
+  debug_field_access "system";
+  t.system
+;;
+
 let asm t = t.asm
 let asm_cfi_supported t = t.asm_cfi_supported
 let with_frame_pointers t = t.with_frame_pointers
-let ext_exe t = t.ext_exe
-let ext_obj t = t.ext_obj
-let ext_asm t = t.ext_asm
-let ext_lib t = t.ext_lib
-let ext_dll t = t.ext_dll
-let os_type t = t.os_type
+
+let ext_exe t =
+  debug_field_access "ext_exe";
+  t.ext_exe
+;;
+
+let ext_obj t =
+  debug_field_access "ext_obj";
+  t.ext_obj
+;;
+
+let ext_asm t =
+  debug_field_access "ext_asm";
+  t.ext_asm
+;;
+
+let ext_lib t =
+  debug_field_access "ext_lib";
+  t.ext_lib
+;;
+
+let ext_dll t =
+  debug_field_access "ext_dll";
+  t.ext_dll
+;;
+
+let os_type t =
+  debug_field_access "os_type";
+  t.os_type
+;;
+
 let default_executable_name t = t.default_executable_name
 let systhread_supported t = t.systhread_supported
 let host t = t.host
@@ -187,8 +253,17 @@ let ast_impl_magic_number t = t.ast_impl_magic_number
 let ast_intf_magic_number t = t.ast_intf_magic_number
 let cmxs_magic_number t = t.cmxs_magic_number
 let cmt_magic_number t = t.cmt_magic_number
-let natdynlink_supported t = t.natdynlink_supported
-let supports_shared_libraries t = t.supports_shared_libraries
+
+let natdynlink_supported t =
+  debug_field_access "natdynlink_supported";
+  t.natdynlink_supported
+;;
+
+let supports_shared_libraries t =
+  debug_field_access "supports_shared_libraries";
+  t.supports_shared_libraries
+;;
+
 let windows_unicode t = t.windows_unicode
 
 let to_list
