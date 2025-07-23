@@ -4,7 +4,7 @@
 
 (** Represent a parsed and interpreted output of [ocamlc -config] and contents
     of [Makefile.config]. *)
-type t
+type t 
 
 val to_dyn : t Dyn.builder
 
@@ -21,7 +21,6 @@ end
     contents of [Makefile.config]. *)
 module Vars : sig
   type t
-
   val find : t -> string -> string option
   val of_list_exn : (string * string) list -> t
   val to_list : t -> (string * string) list
@@ -66,8 +65,8 @@ val make : Vars.t -> (t, Origin.t * string) result
 (** The following parameters match the variables in the output of
     [ocamlc -config] but are stable across versions of OCaml. *)
 
-val version : t -> int * int * int
-val version_string : t -> string
+val version : t -> int * int * int Memo.t
+val version_string : t -> string 
 val standard_library_default : t -> string
 val standard_library : t -> string
 val standard_runtime : t -> string

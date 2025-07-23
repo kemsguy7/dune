@@ -1,4 +1,4 @@
 (library
  (name ocaml_config)
- (libraries stdune)
+ (libraries stdune memo)
  (synopsis "[Internal] Interpret the output of 'ocamlc -config'"))

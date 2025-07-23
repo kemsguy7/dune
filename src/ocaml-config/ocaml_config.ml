@@ -1,5 +1,6 @@
 open! Stdune
 open Result.O
+open Memo.O
 
 module Prog_and_args = struct
   type t =
@@ -142,7 +143,10 @@ type t =
   ; windows_unicode : bool
   }
 
-let version t = t.version
+let version t =
+  debug_field_access "t.version";
+  Memo.return t.version
+;;
 
 let version_string t =
   debug_field_access "version_string";

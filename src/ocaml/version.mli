@@ -1,9 +1,10 @@
+open Memo
 (** Version numbers for ocamlc and ocamlopt *)
 
 type t
 
 val make : int * int * int -> t
-val of_ocaml_config : Ocaml_config.t -> t
+val of_ocaml_config : Ocaml_config.t -> t Memo.t
 
 (** Does this support [-no-keep-locs]? *)
 val supports_no_keep_locs : t -> bool
