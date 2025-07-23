@@ -532,9 +532,10 @@ module Vars = struct
            loop (x :: acc) lines
          | None -> Error (Printf.sprintf "Unrecognized line: %S" line))
     in
-    let* vars = loop [] lines in
-    Result.map_error (String.Map.of_list vars) ~f:(fun (var, _, _) ->
-      Printf.sprintf "Variable %S present twice." var)
+    Result.O.(
+      let* vars = loop [] lines in
+      Result.map_error (String.Map.of_list vars) ~f:(fun (var, _, _) ->
+        Printf.sprintf "Variable %S present twice." var))
   ;;
 
   let load_makefile_config file =

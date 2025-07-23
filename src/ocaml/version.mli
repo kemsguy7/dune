@@ -1,14 +1,9 @@
-open Memo
 (** Version numbers for ocamlc and ocamlopt *)
 
 type t
 
 val make : int * int * int -> t
-
-(** Create a memoized version of the make  function above. *)
 val make_memo : int * int * int Memo.t -> t Memo.t
-
-(** The version of the compiler as a triple (major, minor, patch). *)
 val of_ocaml_config : Ocaml_config.t -> t Memo.t
 
 (** Does this support [-no-keep-locs]? *)

@@ -1,5 +1,3 @@
-open Memo.O
-
 type t = int * int * int
 
 let make x = x
@@ -7,6 +5,7 @@ let of_ocaml_config ocfg = Ocaml_config.version ocfg
 
 (* Implementation of new make_memo function *)
 let make_memo version_memo =
+  let open Memo.O in
   let+ version = version_memo in
   make version
 ;;

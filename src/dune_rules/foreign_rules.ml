@@ -36,7 +36,7 @@ let default_context_flags (ctx : Build_context.t) ocaml_config ~project =
         and+ warnings = warnings
         and+ db_flags =
           Cc_flags.get_flags
-            ~for_:(Compile (Ocaml.Version.make (Ocaml_config.version ocaml_config)))
+            ~for_:(Compile (Ocaml.Version.make_memo (Ocaml_config.version ocaml_config)))
             ctx
         in
         List.concat [ db_flags; cxxflags; warnings; fdiagnostics_color ]
