@@ -1,7 +1,16 @@
+open Memo.O
+
 type t = int * int * int
 
 let make x = x
 let of_ocaml_config ocfg = Ocaml_config.version ocfg
+
+(* Implementation of new make_memo function *)
+let make_memo version_memo =
+  let+ version = version_memo in
+  make version
+;;
+
 let supports_no_keep_locs version = version >= (4, 03, 0)
 let supports_opaque_for_mli version = version >= (4, 03, 0)
 let always_reads_alias_cmi version = version < (4, 03, 0)
