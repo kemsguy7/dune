@@ -3,7 +3,7 @@
 type t
 
 val make : int * int * int -> t
-val make_memo : int * int * int Memo.t -> t Memo.t
+val make_memo : (int * int * int) Memo.t -> t Memo.t
 val of_ocaml_config : Ocaml_config.t -> t Memo.t
 
 (** Does this support [-no-keep-locs]? *)
