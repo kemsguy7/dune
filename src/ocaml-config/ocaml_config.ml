@@ -1,6 +1,4 @@
 open! Stdune
-(* open Result.O
-open Memo.O *)
 
 module Prog_and_args = struct
   type t =

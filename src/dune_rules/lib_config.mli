@@ -58,4 +58,6 @@ val to_dyn : t -> Dyn.t
 (** [["-g"]] if [!Clflags.g] and [[]] otherwise *)
 val cc_g : t -> string list
 
-val create : Ocaml_config.t -> ocamlopt:(_, _) result -> t
+val create : Ocaml_config.t -> ocamlopt:(_, _) result -> t Memo.t
+
+(* val create : Ocaml_config.t -> ocamlopt:Action.Pr Result.t -> t Memo.t *)

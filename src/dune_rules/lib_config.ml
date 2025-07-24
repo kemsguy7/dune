@@ -117,6 +117,8 @@ let cc_g t =
 let create ocaml_config ~ocamlopt =
   Printf.eprintf
     "[FIELD] lib_config.create called - creating lib_config from ocaml_config\n%!";
+  let open Memo.O in
+  let+ ocaml_version = Ocaml.Version.of_ocaml_config ocaml_config in
   { has_native = Result.is_ok ocamlopt
   ; ext_obj = Ocaml_config.ext_obj ocaml_config
   ; ext_lib = Ocaml_config.ext_lib ocaml_config
@@ -131,6 +133,6 @@ let create ocaml_config ~ocamlopt =
   ; stdlib_dir = Path.of_string (Ocaml_config.standard_library ocaml_config)
   ; ccomp_type = Ocaml_config.ccomp_type ocaml_config
   ; ocaml_version_string = Ocaml_config.version_string ocaml_config
-  ; ocaml_version = Ocaml.Version.of_ocaml_config ocaml_config
+  ; ocaml_version
   }
 ;;
