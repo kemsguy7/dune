@@ -94,20 +94,19 @@ let make name ~which ~env ~get_ocaml_tool =
   let* version = Ocaml.Version.of_ocaml_config ocaml_config in
   let builtins = make_builtins ~version ~ocaml_config in
   let+ lib_config = Lib_config.create ocaml_config ~ocamlopt in
-  Memo.return
-    { bin_dir = ocaml_bin
-    ; ocaml
-    ; ocamlc
-    ; ocamlopt
-    ; ocamldep
-    ; ocamlmklib
-    ; ocamlobjinfo
-    ; ocaml_config
-    ; ocaml_config_vars
-    ; version
-    ; builtins = Memo.Lazy.force builtins
-    ; lib_config
-    }
+  { bin_dir = ocaml_bin
+  ; ocaml
+  ; ocamlc
+  ; ocamlopt
+  ; ocamldep
+  ; ocamlmklib
+  ; ocamlobjinfo
+  ; ocaml_config
+  ; ocaml_config_vars
+  ; version
+  ; builtins = Memo.Lazy.force builtins
+  ; lib_config
+  }
 ;;
 
 let of_env_with_findlib name env findlib_config ~which =
