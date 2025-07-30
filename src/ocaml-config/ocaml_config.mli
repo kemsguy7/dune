@@ -66,6 +66,7 @@ val make : Vars.t -> (t, Origin.t * string) result
 (** The following parameters match the variables in the output of
     [ocamlc -config] but are stable across versions of OCaml. *)
 
+
 val version : t -> int * int * int
 val version_string : t -> string
 val standard_library_default : t -> string
@@ -136,3 +137,9 @@ end
 val to_list : t -> (string * Value.t) list
 val by_name : t -> string -> Value.t option
 val is_dev_version : t -> bool
+
+
+
+(** new instrumented configuration that logs field access *)
+
+val create_instrumented : ocamlc_path:string -> t

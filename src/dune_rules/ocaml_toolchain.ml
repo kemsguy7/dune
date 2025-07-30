@@ -22,6 +22,7 @@ let make_builtins ~ocaml_config ~version =
     Meta.builtins ~stdlib_dir ~version)
 ;;
 
+(*  Original eager ocamlc -config loading
 let make_ocaml_config ~env ~ocamlc =
   let+ vars =
     Process.run_capture_lines ~display:Quiet ~env Strict ocamlc [ "-config" ]
@@ -44,6 +45,18 @@ let make_ocaml_config ~env ~ocamlc =
       [ Pp.textf "Failed to parse the output of '%s -config':" (Path.to_string ocamlc)
       ; Pp.text msg
       ]
+;;
+*)
+
+(*  New instrumented config approach *)
+let make_ocaml_config ~env:_ ~ocamlc =
+  (*  instrumented config that will run ocamlc -config on each field access *)
+  let ocaml_config =
+    Ocaml_config.create_instrumented ~ocamlc_path:(Path.to_string ocamlc)
+  in
+  (* Creating empty Vars.t (which is string String.Map.t) since it's now loading on-demand  *)
+  let ocaml_config_vars = Ocaml_config.Vars.of_list_exn [] in
+  Memo.return (ocaml_config_vars, ocaml_config)
 ;;
 
 let compiler t (mode : Ocaml.Mode.t) =
