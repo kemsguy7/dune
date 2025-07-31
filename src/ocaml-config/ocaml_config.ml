@@ -191,13 +191,19 @@ let run_ocamlc_config_and_parse ocamlc_path field_name =
   let log_file = "/tmp/dune_field_access.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
   Printf.fprintf oc "%s\n" field_name;
+  flush oc;
+  (*  ensure log writes complete *)
   close_out oc;
-  (* Running  ocamlc -config and saving to output file *)
+  (* Running ocamlc -config and saving to output file *)
+  let temp_file =
+    "/tmp/ocamlc_temp_output_" ^ string_of_int (Random.int 10000) ^ ".txt"
+  in
+  (* FIXED: unique temp files *)
   let out =
     Unix_ops.openfile
-      "/tmp/ocamlc_temp_output.txt"
+      temp_file
       [ Unix_ops.O_RDWR; Unix_ops.O_CREAT; Unix_ops.O_TRUNC ]
-      0o777
+      0o644
   in
   let pid =
     Unix_ops.create_process
@@ -208,12 +214,12 @@ let run_ocamlc_config_and_parse ocamlc_path field_name =
       Unix_ops.stderr
   in
   let _ = Unix_ops.waitpid [] pid in
-  let _ = Unix_ops.lseek out 0 Unix_ops.SEEK_SET in
-  let chan = Unix_ops.in_channel_of_descr out in
-  let lines = In_channel.input_lines chan in
-  In_channel.close chan;
   Unix_ops.close out;
-  (* Using existing Vars.of_lines to parse the output *)
+  let ic = open_in temp_file in
+  let lines = In_channel.input_lines ic in
+  In_channel.close ic;
+  (try Sys.remove temp_file with
+   | _ -> ());
   match Vars.of_lines lines with
   | Ok vars -> vars
   | Error msg -> failwith ("Failed to parse ocamlc -config: " ^ msg)
