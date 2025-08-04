@@ -186,7 +186,7 @@ end
    NEW: On-demand ocamlc -config runner using existing Vars infrastructure
 *)
 
-let run_ocamlc_config_and_parse ocamlc_path field_name =
+(* let run_ocamlc_config_and_parse ocamlc_path field_name =
   (* Log which field is being accessed *)
   let log_file = "/tmp/dune_field_access.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
@@ -223,12 +223,38 @@ let run_ocamlc_config_and_parse ocamlc_path field_name =
   match Vars.of_lines lines with
   | Ok vars -> vars
   | Error msg -> failwith ("Failed to parse ocamlc -config: " ^ msg)
+;; *)
+
+(*using hardcoded values*)
+let get_hardcoded_field field_name =
+  (* still logging which field is being accessed for verification *)
+  let log_file = "/tmp/dune_field_access.log" in
+  let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
+  Printf.fprintf oc "%s (HARDCODED\n)" field_name;
+  flush oc;
+  close_out oc;
+  (*  Return hardcoded values based on field names *)
+  let hardcoded_vars =
+    [ "version", "5.2.1"
+    ; "ccomp_type", "cc"
+    ; "standard_library", "/usr/local/lib/ocaml"
+    ; "ext_dll", ".so"
+    ; "model", "default"
+    ; "system", "linux"
+    ; "architecture", "amd64"
+    ; "os_type", "Unix"
+    ; "ext_obj", ".o"
+    ; "ext_lib", ".a"
+    ]
+  in
+  (* Convert to the Vars.t format (String.Map.t) *)
+  Vars.of_list_exn hardcoded_vars
 ;;
 
 (*
    All getter functions now use on-demand loading with helpers functions
 *)
-
+(* 
 let version t =
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "version" in
   let open Vars.Ocamlc_config_getters in
@@ -582,6 +608,77 @@ let by_name t name =
   match get_opt vars name with
   | Some value -> Some (Value.String value)
   | None -> None
+;; *)
+
+(* HARDCODED versions of the accessed fields *)
+
+let version _t =
+  let vars = get_hardcoded_field "version" in
+  let open Vars.Ocamlc_config_getters in
+  let version_string = get vars "version" in
+  match Scanf.sscanf version_string "%u.%u.%u" (fun a b c -> a, b, c) with
+  | Ok tuple -> tuple
+  | Error () -> failwith ("Unable to parse version: " ^ version_string)
+;;
+
+let version_string _t =
+  let vars = get_hardcoded_field "version" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "version"
+;;
+
+let ccomp_type _t =
+  let vars = get_hardcoded_field "ccomp_type" in
+  let open Vars.Ocamlc_config_getters in
+  Ccomp_type.of_string (get vars "ccomp_type")
+;;
+
+let standard_library _t =
+  let vars = get_hardcoded_field "standard_library" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "standard_library"
+;;
+
+let ext_dll _t =
+  let vars = get_hardcoded_field "ext_dll" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_dll"
+;;
+
+let model _t =
+  let vars = get_hardcoded_field "model" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "model"
+;;
+
+let system _t =
+  let vars = get_hardcoded_field "system" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "system"
+;;
+
+let architecture _t =
+  let vars = get_hardcoded_field "architecture" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "architecture"
+;;
+
+let os_type _t =
+  let vars = get_hardcoded_field "os_type" in
+  let open Vars.Ocamlc_config_getters in
+  Os_type.of_string (get vars "os_type")
+;;
+
+let ext_obj _t =
+  let vars = get_hardcoded_field "ext_obj" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_obj"
+;;
+
+let ext_lib _t =
+  let vars = get_hardcoded_field "ext_lib" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_lib"
 ;;
 
 (*
