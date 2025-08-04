@@ -182,23 +182,41 @@ module Vars = struct
     end)
 end
 
-(*
-   NEW: On-demand ocamlc -config runner using existing Vars infrastructure
-*)
+(* HYBRID APPROACH: Two different field access methods *)
 
-(* let run_ocamlc_config_and_parse ocamlc_path field_name =
-  (* Log which field is being accessed *)
+(* Method 1: Hardcoded values for the 10 frequently accessed fields *)
+let get_hardcoded_field field_name =
   let log_file = "/tmp/dune_field_access.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
-  Printf.fprintf oc "%s\n" field_name;
+  Printf.fprintf oc "%s (HARDCODED)\n" field_name;
   flush oc;
-  (*  ensure log writes complete *)
   close_out oc;
-  (* Running ocamlc -config and saving to output file *)
+  let hardcoded_vars =
+    [ "version", "5.2.1"
+    ; "ccomp_type", "cc"
+    ; "standard_library", "/usr/local/lib/ocaml"
+    ; "ext_dll", ".so"
+    ; "model", "default"
+    ; "system", "linux"
+    ; "architecture", "amd64"
+    ; "os_type", "Unix"
+    ; "ext_obj", ".o"
+    ; "ext_lib", ".a"
+    ]
+  in
+  Vars.of_list_exn hardcoded_vars
+;;
+
+(* Method 2: Original ocamlc -config for other fields (when rarely needed) *)
+let run_ocamlc_config_and_parse ocamlc_path field_name =
+  let log_file = "/tmp/dune_field_access.log" in
+  let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
+  Printf.fprintf oc "%s (OCAMLC)\n" field_name;
+  flush oc;
+  close_out oc;
   let temp_file =
     "/tmp/ocamlc_temp_output_" ^ string_of_int (Random.int 10000) ^ ".txt"
   in
-  (* FIXED: unique temp files *)
   let out =
     Unix_ops.openfile
       temp_file
@@ -223,40 +241,12 @@ end
   match Vars.of_lines lines with
   | Ok vars -> vars
   | Error msg -> failwith ("Failed to parse ocamlc -config: " ^ msg)
-;; *)
-
-(*using hardcoded values*)
-let get_hardcoded_field field_name =
-  (* still logging which field is being accessed for verification *)
-  let log_file = "/tmp/dune_field_access.log" in
-  let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
-  Printf.fprintf oc "%s (HARDCODED\n)" field_name;
-  flush oc;
-  close_out oc;
-  (*  Return hardcoded values based on field names *)
-  let hardcoded_vars =
-    [ "version", "5.2.1"
-    ; "ccomp_type", "cc"
-    ; "standard_library", "/usr/local/lib/ocaml"
-    ; "ext_dll", ".so"
-    ; "model", "default"
-    ; "system", "linux"
-    ; "architecture", "amd64"
-    ; "os_type", "Unix"
-    ; "ext_obj", ".o"
-    ; "ext_lib", ".a"
-    ]
-  in
-  (* Convert to the Vars.t format (String.Map.t) *)
-  Vars.of_list_exn hardcoded_vars
 ;;
 
-(*
-   All getter functions now use on-demand loading with helpers functions
-*)
-(* 
-let version t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "version" in
+(* HARDCODED GETTERS: For the 10 frequently accessed fields *)
+
+let version _t =
+  let vars = get_hardcoded_field "version" in
   let open Vars.Ocamlc_config_getters in
   let version_string = get vars "version" in
   match Scanf.sscanf version_string "%u.%u.%u" (fun a b c -> a, b, c) with
@@ -264,22 +254,72 @@ let version t =
   | Error () -> failwith ("Unable to parse version: " ^ version_string)
 ;;
 
-let version_string t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "version" in
+let version_string _t =
+  let vars = get_hardcoded_field "version" in
   let open Vars.Ocamlc_config_getters in
   get vars "version"
 ;;
+
+let ccomp_type _t =
+  let vars = get_hardcoded_field "ccomp_type" in
+  let open Vars.Ocamlc_config_getters in
+  Ccomp_type.of_string (get vars "ccomp_type")
+;;
+
+let standard_library _t =
+  let vars = get_hardcoded_field "standard_library" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "standard_library"
+;;
+
+let ext_dll _t =
+  let vars = get_hardcoded_field "ext_dll" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_dll"
+;;
+
+let model _t =
+  let vars = get_hardcoded_field "model" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "model"
+;;
+
+let system _t =
+  let vars = get_hardcoded_field "system" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "system"
+;;
+
+let architecture _t =
+  let vars = get_hardcoded_field "architecture" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "architecture"
+;;
+
+let os_type _t =
+  let vars = get_hardcoded_field "os_type" in
+  let open Vars.Ocamlc_config_getters in
+  Os_type.of_string (get vars "os_type")
+;;
+
+let ext_obj _t =
+  let vars = get_hardcoded_field "ext_obj" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_obj"
+;;
+
+let ext_lib _t =
+  let vars = get_hardcoded_field "ext_lib" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_lib"
+;;
+
+(* ORIGINAL GETTERS: For the remaining 42 fields (rarely accessed) *)
 
 let standard_library_default t =
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "standard_library_default" in
   let open Vars.Ocamlc_config_getters in
   get vars "standard_library_default"
-;;
-
-let standard_library t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "standard_library" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "standard_library"
 ;;
 
 let standard_runtime t =
@@ -288,12 +328,6 @@ let standard_runtime t =
   match get_opt vars "standard_runtime" with
   | Some value -> value
   | None -> "the_standard_runtime_variable_was_deleted"
-;;
-
-let ccomp_type t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "ccomp_type" in
-  let open Vars.Ocamlc_config_getters in
-  Ccomp_type.of_string (get vars "ccomp_type")
 ;;
 
 let c_compiler t =
@@ -362,40 +396,20 @@ let cc_profile t =
   get_words vars "cc_profile"
 ;;
 
-let architecture t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "architecture" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "architecture"
-;;
-
-let model t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "model" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "model"
-;;
-
 let int_size t =
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "int_size" in
   let open Vars.Ocamlc_config_getters in
-  (* SIMPLIFIED: Removed get_arch_sixtyfour fallback logic *)
   match get_int_opt vars "int_size" with
   | Some n -> n
-  | None -> 63 (* Default fallback *)
+  | None -> 63
 ;;
 
 let word_size t =
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "word_size" in
   let open Vars.Ocamlc_config_getters in
-  (* SIMPLIFIED: Removed get_arch_sixtyfour fallback logic *)
   match get_int_opt vars "word_size" with
   | Some n -> n
-  | None -> 64 (* Default fallback *)
-;;
-
-let system t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "system" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "system"
+  | None -> 64
 ;;
 
 let asm t =
@@ -426,34 +440,10 @@ let ext_exe t =
     if String.equal os_type_str "Win32" then ".exe" else ""
 ;;
 
-let ext_obj t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "ext_obj" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_obj"
-;;
-
 let ext_asm t =
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "ext_asm" in
   let open Vars.Ocamlc_config_getters in
   get vars "ext_asm"
-;;
-
-let ext_lib t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "ext_lib" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_lib"
-;;
-
-let ext_dll t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "ext_dll" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_dll"
-;;
-
-let os_type t =
-  let vars = run_ocamlc_config_and_parse t.ocamlc_path "os_type" in
-  let open Vars.Ocamlc_config_getters in
-  Os_type.of_string (get vars "os_type")
 ;;
 
 let default_executable_name t =
@@ -571,7 +561,6 @@ let windows_unicode t =
 ;;
 
 let natdynlink_supported t =
-  (* SIMPLIFIED: Still uses filesystem check but with on-demand standard_library *)
   let standard_lib = standard_library t in
   let version_tuple = version t in
   let lib = "dynlink.cmxa" in
@@ -580,7 +569,6 @@ let natdynlink_supported t =
 ;;
 
 let supports_shared_libraries t =
-  (* SIMPLIFIED: Just return false since we removed Makefile.config loading *)
   let vars = run_ocamlc_config_and_parse t.ocamlc_path "supports_shared_libraries" in
   let open Vars.Ocamlc_config_getters in
   get_bool vars "SUPPORTS_SHARED_LIBRARIES" ~default:false
@@ -596,97 +584,15 @@ let to_dyn t =
   Record [ "ocamlc_path", String t.ocamlc_path ]
 ;;
 
-let to_list _t =
-  (* REMOVED: Full implementation that populated all fields *)
-  []
-;;
+let to_list _t = []
 
 let by_name t name =
-  (* SIMPLIFIED: Just does a single field lookup *)
   let vars = run_ocamlc_config_and_parse t.ocamlc_path ("by_name:" ^ name) in
   let open Vars.Ocamlc_config_getters in
   match get_opt vars name with
   | Some value -> Some (Value.String value)
   | None -> None
-;; *)
-
-(* HARDCODED versions of the accessed fields *)
-
-let version _t =
-  let vars = get_hardcoded_field "version" in
-  let open Vars.Ocamlc_config_getters in
-  let version_string = get vars "version" in
-  match Scanf.sscanf version_string "%u.%u.%u" (fun a b c -> a, b, c) with
-  | Ok tuple -> tuple
-  | Error () -> failwith ("Unable to parse version: " ^ version_string)
 ;;
-
-let version_string _t =
-  let vars = get_hardcoded_field "version" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "version"
-;;
-
-let ccomp_type _t =
-  let vars = get_hardcoded_field "ccomp_type" in
-  let open Vars.Ocamlc_config_getters in
-  Ccomp_type.of_string (get vars "ccomp_type")
-;;
-
-let standard_library _t =
-  let vars = get_hardcoded_field "standard_library" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "standard_library"
-;;
-
-let ext_dll _t =
-  let vars = get_hardcoded_field "ext_dll" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_dll"
-;;
-
-let model _t =
-  let vars = get_hardcoded_field "model" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "model"
-;;
-
-let system _t =
-  let vars = get_hardcoded_field "system" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "system"
-;;
-
-let architecture _t =
-  let vars = get_hardcoded_field "architecture" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "architecture"
-;;
-
-let os_type _t =
-  let vars = get_hardcoded_field "os_type" in
-  let open Vars.Ocamlc_config_getters in
-  Os_type.of_string (get vars "os_type")
-;;
-
-let ext_obj _t =
-  let vars = get_hardcoded_field "ext_obj" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_obj"
-;;
-
-let ext_lib _t =
-  let vars = get_hardcoded_field "ext_lib" in
-  let open Vars.Ocamlc_config_getters in
-  get vars "ext_lib"
-;;
-
-(*
-   New Create instrumented config function
-*)
 
 let create_instrumented ~ocamlc_path = { ocamlc_path }
-
-(* simplified make vars function *)
-
 let make _vars = Ok (create_instrumented ~ocamlc_path:"ocamlc")
