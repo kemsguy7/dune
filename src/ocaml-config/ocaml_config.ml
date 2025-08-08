@@ -185,7 +185,62 @@ end
 (* HYBRID APPROACH: Two different field access methods *)
 
 (* Method 1: Hardcoded values for the 10 frequently accessed fields *)
-let get_hardcoded_field field_name =
+(* Add these functions right before your get_hardcoded_field function *)
+
+let run_command cmd =
+  let ic = Unix_ops.open_process_in cmd in
+  let result =
+    match In_channel.input_line ic with
+    | Some line -> String.trim line
+    | None -> ""
+  in
+  let _ = Unix_ops.close_process_in ic in
+  result
+;;
+
+let detect_architecture () =
+  try
+    let arch = run_command "uname -m" in
+    match arch with
+    | "x86_64" -> "amd64"
+    | other -> other
+  with
+  | _ -> "amd64"
+;;
+
+let detect_system () =
+  try String.lowercase (run_command "uname -s") with
+  | _ -> "linux"
+;;
+
+let detect_os_type () =
+  let system = String.capitalize (detect_system ()) in
+  match system with
+  | "Linux" | "Darwin" | "FreeBSD" | "OpenBSD" | "NetBSD" -> "Unix"
+  | s when String.is_prefix s ~prefix:"Cygwin" -> "Win32"
+  | s when String.is_prefix s ~prefix:"Mingw" -> "Win32"
+  | "Windows_nt" -> "Win32"
+  | _ -> "Unix"
+;;
+
+let get_computed_field field_name =
+  let log_file = "/tmp/dune_field_access.log" in
+  let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
+  Printf.fprintf oc "%s (COMPUTED)\n" field_name;
+  (* Changed from HARDCODED to COMPUTED *)
+  flush oc;
+  close_out oc;
+  (* REPLACING hardcoded values with computed detection *)
+  let computed_vars =
+    [ "system", detect_system ()
+    ; "architecture", detect_architecture ()
+    ; "os_type", detect_os_type ()
+    ]
+  in
+  Vars.of_list_exn computed_vars
+;;
+
+(* let get_hardcoded_field field_name =
   let log_file = "/tmp/dune_field_access.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
   Printf.fprintf oc "%s (HARDCODED)\n" field_name;
@@ -205,7 +260,7 @@ let get_hardcoded_field field_name =
     ]
   in
   Vars.of_list_exn hardcoded_vars
-;;
+;; *)
 
 (* Method 2: Original ocamlc -config for other fields (when rarely needed) *)
 let run_ocamlc_config_and_parse ocamlc_path field_name =
@@ -244,7 +299,7 @@ let run_ocamlc_config_and_parse ocamlc_path field_name =
 ;;
 
 (* HARDCODED GETTERS: For the 10 frequently accessed fields *)
-
+(* 
 let version _t =
   let vars = get_hardcoded_field "version" in
   let open Vars.Ocamlc_config_getters in
@@ -312,7 +367,7 @@ let ext_lib _t =
   let vars = get_hardcoded_field "ext_lib" in
   let open Vars.Ocamlc_config_getters in
   get vars "ext_lib"
-;;
+;; *)
 
 (* ORIGINAL GETTERS: For the remaining 42 fields (rarely accessed) *)
 
