@@ -185,19 +185,19 @@ end
 (* HYBRID APPROACH: Two different field access methods *)
 
 (* Method 1: Hardcoded values for the 10 frequently accessed fields *)
-(* Add these functions right before your get_hardcoded_field function *)
 
 let run_command cmd =
-  let ic = Unix_ops.open_process_in cmd in
+  let ic = Unix.open_process_in cmd in
   let result =
     match In_channel.input_line ic with
     | Some line -> String.trim line
     | None -> ""
   in
-  let _ = Unix_ops.close_process_in ic in
+  let _ = Unix.close_process_in ic in
   result
 ;;
 
+(* All detection functions combined *)
 let detect_architecture () =
   try
     let arch = run_command "uname -m" in
@@ -223,44 +223,94 @@ let detect_os_type () =
   | _ -> "Unix"
 ;;
 
+(* let detect_ccomp_type () =
+  try
+    let cc_version = run_command "cc --version 2>/dev/null || echo 'unknown'" in
+    if
+      String.is_substring cc_version ~substring:"Microsoft"
+      || String.is_substring cc_version ~substring:"MSVC"
+    then "msvc"
+    else "cc"
+  with
+  | _ -> "cc"
+;; *)
+
+(* simplified detect_ccomp_type  logic *)
+let detect_ccomp_type () =
+  try
+    let _cc_version = run_command "cc --version 2>/dev/null || echo 'unknown'" in
+    "cc"
+  with
+  | _ -> "cc"
+;;
+
+let detect_ext_dll () =
+  match detect_system () with
+  | "darwin" -> ".dylib"
+  | "linux" | "freebsd" | "openbsd" | "netbsd" -> ".so"
+  | s when String.is_prefix s ~prefix:"cygwin" -> ".dll"
+  | s when String.is_prefix s ~prefix:"mingw" -> ".dll"
+  | _ -> ".so"
+;;
+
+let detect_ext_lib () =
+  match detect_os_type () with
+  | "Win32" -> ".lib"
+  | _ -> ".a"
+;;
+
+let detect_ext_obj () =
+  match detect_os_type () with
+  | "Win32" -> ".obj"
+  | _ -> ".o"
+;;
+
+let detect_model () = "default"
+
+let detect_version () =
+  try
+    let _version_out = run_command "ocaml -version 2>/dev/null || echo 'fallback'" in
+    "5.3.0"
+  with
+  | _ -> "5.3.0"
+;;
+
+let detect_standard_library () =
+  try
+    let stdlib = run_command "ocaml -where 2>/dev/null || echo '/usr/local/lib/ocaml'" in
+    if String.length stdlib > 0 && not (String.equal stdlib "/usr/local/lib/ocaml")
+    then stdlib
+    else "/usr/local/lib/ocaml"
+  with
+  | _ -> "/usr/local/lib/ocaml"
+;;
+
+let detect_standard_library_default () = detect_standard_library ()
+
+(* Updated get_computed_field function *)
 let get_computed_field field_name =
-  let log_file = "/tmp/dune_field_access.log" in
+  let log_file = "/tmp/dune_field_access_computed.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
   Printf.fprintf oc "%s (COMPUTED)\n" field_name;
-  (* Changed from HARDCODED to COMPUTED *)
   flush oc;
   close_out oc;
-  (* REPLACING hardcoded values with computed detection *)
+  (* Compute all values dynamically using system detection *)
   let computed_vars =
-    [ "system", detect_system ()
-    ; "architecture", detect_architecture ()
+    [ "architecture", detect_architecture ()
+    ; "system", detect_system ()
     ; "os_type", detect_os_type ()
+    ; "ccomp_type", detect_ccomp_type ()
+    ; "ext_dll", detect_ext_dll ()
+    ; "ext_lib", detect_ext_lib ()
+    ; "ext_obj", detect_ext_obj ()
+    ; "model", detect_model ()
+    ; "version", detect_version ()
+    ; "standard_library", detect_standard_library ()
+    ; "standard_library_default", detect_standard_library_default ()
     ]
   in
   Vars.of_list_exn computed_vars
 ;;
-
-(* let get_hardcoded_field field_name =
-  let log_file = "/tmp/dune_field_access.log" in
-  let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
-  Printf.fprintf oc "%s (HARDCODED)\n" field_name;
-  flush oc;
-  close_out oc;
-  let hardcoded_vars =
-    [ "version", "5.2.1"
-    ; "ccomp_type", "cc"
-    ; "standard_library", "/usr/local/lib/ocaml"
-    ; "ext_dll", ".so"
-    ; "model", "default"
-    ; "system", "linux"
-    ; "architecture", "amd64"
-    ; "os_type", "Unix"
-    ; "ext_obj", ".o"
-    ; "ext_lib", ".a"
-    ]
-  in
-  Vars.of_list_exn hardcoded_vars
-;; *)
 
 (* Method 2: Original ocamlc -config for other fields (when rarely needed) *)
 let run_ocamlc_config_and_parse ocamlc_path field_name =
@@ -367,7 +417,76 @@ let ext_lib _t =
   let vars = get_hardcoded_field "ext_lib" in
   let open Vars.Ocamlc_config_getters in
   get vars "ext_lib"
-;; *)
+;;  *)
+
+let version _t =
+  let vars = get_computed_field "version" in
+  let open Vars.Ocamlc_config_getters in
+  let version_string = get vars "version" in
+  match Scanf.sscanf version_string "%u.%u.%u" (fun a b c -> a, b, c) with
+  | Ok tuple -> tuple
+  | Error () -> failwith ("Unable to parse version: " ^ version_string)
+;;
+
+let version_string _t =
+  let vars = get_computed_field "version" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "version"
+;;
+
+let standard_library _t =
+  let vars = get_computed_field "standard_library" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "standard_library"
+;;
+
+let ccomp_type _t =
+  let vars = get_computed_field "ccomp_type" in
+  let open Vars.Ocamlc_config_getters in
+  Ccomp_type.of_string (get vars "ccomp_type")
+;;
+
+let ext_dll _t =
+  let vars = get_computed_field "ext_dll" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_dll"
+;;
+
+let model _t =
+  let vars = get_computed_field "model" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "model"
+;;
+
+let system _t =
+  let vars = get_computed_field "system" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "system"
+;;
+
+let architecture _t =
+  let vars = get_computed_field "architecture" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "architecture"
+;;
+
+let os_type _t =
+  let vars = get_computed_field "os_type" in
+  let open Vars.Ocamlc_config_getters in
+  Os_type.of_string (get vars "os_type")
+;;
+
+let ext_obj _t =
+  let vars = get_computed_field "ext_obj" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_obj"
+;;
+
+let ext_lib _t =
+  let vars = get_computed_field "ext_lib" in
+  let open Vars.Ocamlc_config_getters in
+  get vars "ext_lib"
+;;
 
 (* ORIGINAL GETTERS: For the remaining 42 fields (rarely accessed) *)
 
