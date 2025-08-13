@@ -21,7 +21,7 @@ let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.
      let+ ocamlc, ocaml_config_vars = ocaml_and_ocaml_config_vars in
      (let open Dune_lang.Encoder in
       record_fields
-        [ field "ocamlc" string ocamlc
+        [ field "ocamlc5" string ocamlc
         ; field_l "ocaml_config_vars" (pair string string) ocaml_config_vars
         ])
      |> List.map ~f:(fun x -> Dune_lang.to_string x ^ "\n")
@@ -39,7 +39,7 @@ let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.
       Sexp.List (List.map ocaml_config_vars ~f:(fun (k, v) -> List [ Atom k; Atom v ]))
     in
     List
-      [ List [ Atom "ocamlc"; Atom ocamlc ]
+      [ List [ Atom "ocamlc4"; Atom ocamlc ]
       ; List [ Atom "ocaml_config_vars"; ocaml_config_vars ]
       ])
    |> Csexp.to_string

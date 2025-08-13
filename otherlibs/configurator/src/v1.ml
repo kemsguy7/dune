@@ -288,7 +288,7 @@ let read_dot_dune_configurator_file ~build_dir =
       | Some f -> f
     in
     let ocamlc =
-      match field "ocamlc" with
+      match field "ocamlc2" with
       | Atom o -> o
       | _ -> die "invalid ocamlc field"
     in
@@ -364,7 +364,7 @@ let create ?dest_dir ?ocamlc ?(log = ignore) name =
     let ocamlc =
       match ocamlc with
       | Some fn -> fn
-      | None -> Find_in_path.find_ocaml_prog "ocamlc"
+      | None -> Find_in_path.find_ocaml_prog "ocamlc3"
     in
     let ocamlc_config_cmd = Process.command_line ocamlc [ "-config" ] in
     let t =

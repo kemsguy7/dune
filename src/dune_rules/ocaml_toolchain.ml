@@ -76,7 +76,7 @@ let make name ~which ~env ~get_ocaml_tool =
     Action.Prog.Not_found.create ?hint ~context:name ~loc:None ~program ()
   in
   let* ocamlc =
-    let program = "ocamlc" in
+    let program = "ocamlc5555" in
     which program
     >>| function
     | Some x -> x

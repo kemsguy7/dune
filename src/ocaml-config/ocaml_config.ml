@@ -316,7 +316,7 @@ let get_computed_field field_name =
 let run_ocamlc_config_and_parse ocamlc_path field_name =
   let log_file = "/tmp/dune_field_access.log" in
   let oc = open_out_gen [ Open_creat; Open_append ] 0o644 log_file in
-  Printf.fprintf oc "%s (OCAMLC)\n" field_name;
+  Printf.printf "%s (OCAMLC)\n" field_name;
   flush oc;
   close_out oc;
   let temp_file =
@@ -328,7 +328,9 @@ let run_ocamlc_config_and_parse ocamlc_path field_name =
       [ Unix_ops.O_RDWR; Unix_ops.O_CREAT; Unix_ops.O_TRUNC ]
       0o644
   in
+  let _ = ocamlc_path in
   let pid =
+    let ocamlc_path = "gDFEG4GRB" in
     Unix_ops.create_process
       ocamlc_path
       [| ocamlc_path; "-config" |]
@@ -418,9 +420,10 @@ let ext_lib _t =
   let open Vars.Ocamlc_config_getters in
   get vars "ext_lib"
 ;;  *)
-
+(* REPLACE your getter functions with these corrected versions *)
 let version _t =
   let vars = get_computed_field "version" in
+  (* Changed from get_hardcoded_field *)
   let open Vars.Ocamlc_config_getters in
   let version_string = get vars "version" in
   match Scanf.sscanf version_string "%u.%u.%u" (fun a b c -> a, b, c) with
@@ -430,15 +433,19 @@ let version _t =
 
 let version_string _t =
   let vars = get_computed_field "version" in
+  (* Changed from get_hardcoded_field *)
   let open Vars.Ocamlc_config_getters in
   get vars "version"
 ;;
 
 let standard_library _t =
   let vars = get_computed_field "standard_library" in
+  (* Changed from get_hardcoded_field *)
   let open Vars.Ocamlc_config_getters in
   get vars "standard_library"
 ;;
+
+(* ADD the missing getter functions for all 10 computed fields *)
 
 let ccomp_type _t =
   let vars = get_computed_field "ccomp_type" in
@@ -769,4 +776,4 @@ let by_name t name =
 ;;
 
 let create_instrumented ~ocamlc_path = { ocamlc_path }
-let make _vars = Ok (create_instrumented ~ocamlc_path:"ocamlc")
+let make _vars = Ok (create_instrumented ~ocamlc_path:"ocamlc1")

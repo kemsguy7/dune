@@ -102,6 +102,7 @@ let exit_and_flush code =
 ;;
 
 let () =
+  print_endline "Hello World";
   Dune_rules.Colors.setup_err_formatter_colors ();
   try
     match Cmd.eval_value cmd ~catch:false with
