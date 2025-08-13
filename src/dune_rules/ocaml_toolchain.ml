@@ -4,7 +4,7 @@ open Memo.O
 type t =
   { bin_dir : Path.t
   ; ocaml : Action.Prog.t
-  ; ocamlc : Path.t
+  ; ocamlc : Path.t Lazy.t
   ; ocamlopt : Action.Prog.t
   ; ocamldep : Action.Prog.t
   ; ocamlmklib : Action.Prog.t
@@ -61,7 +61,7 @@ let make_ocaml_config ~env:_ ~ocamlc =
 
 let compiler t (mode : Ocaml.Mode.t) =
   match mode with
-  | Byte -> Ok t.ocamlc
+  | Byte -> Ok (Lazy.force t.ocamlc)
   | Native -> t.ocamlopt
 ;;
 
@@ -109,7 +109,7 @@ let make name ~which ~env ~get_ocaml_tool =
   Memo.return
     { bin_dir = ocaml_bin
     ; ocaml
-    ; ocamlc
+    ; ocamlc = lazy ocamlc (* storing this as a lazy value*)
     ; ocamlopt
     ; ocamldep
     ; ocamlmklib
@@ -163,7 +163,7 @@ let register_response_file_support t =
   then (
     let set prog = Response_file.set ~prog (Zero_terminated_strings "-args0") in
     Result.iter t.ocaml ~f:set;
-    set t.ocamlc;
+    set (Lazy.force t.ocamlc);
     Result.iter t.ocamlopt ~f:set;
     Result.iter t.ocamldep ~f:set;
     if Ocaml.Version.ocamlmklib_supports_response_file t.version
