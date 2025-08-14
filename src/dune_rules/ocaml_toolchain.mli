@@ -7,7 +7,7 @@ type t =
   ; ocaml : Action.Prog.t
   ; ocamlc : Path.t Lazy.t 
   ; ocamlopt : Action.Prog.t Lazy.t 
-  ; ocamldep : Action.Prog.t
+  ; ocamldep : Action.Prog.t Lazy.t 
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t
   ; ocaml_config : Ocaml_config.t

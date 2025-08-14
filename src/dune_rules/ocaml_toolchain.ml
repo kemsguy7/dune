@@ -6,7 +6,7 @@ type t =
   ; ocaml : Action.Prog.t
   ; ocamlc : Path.t Lazy.t
   ; ocamlopt : Action.Prog.t Lazy.t
-  ; ocamldep : Action.Prog.t
+  ; ocamldep : Action.Prog.t Lazy.t
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t
   ; ocaml_config : Ocaml_config.t
@@ -22,37 +22,11 @@ let make_builtins ~ocaml_config ~version =
     Meta.builtins ~stdlib_dir ~version)
 ;;
 
-(*  Original eager ocamlc -config loading
-let make_ocaml_config ~env ~ocamlc =
-  let+ vars =
-    Process.run_capture_lines ~display:Quiet ~env Strict ocamlc [ "-config" ]
-    |> Memo.of_reproducible_fiber
-    >>| Ocaml_config.Vars.of_lines
-  in
-  match
-    match vars with
-    | Error msg -> Error (Ocaml_config.Origin.Ocamlc_config, msg)
-    | Ok vars ->
-      let open Result.O in
-      let+ ocfg = Ocaml_config.make vars in
-      vars, ocfg
-  with
-  | Ok x -> x
-  | Error (Ocaml_config.Origin.Makefile_config file, msg) ->
-    User_error.raise ~loc:(Loc.in_file file) [ Pp.text msg ]
-  | Error (Ocamlc_config, msg) ->
-    User_error.raise
-      [ Pp.textf "Failed to parse the output of '%s -config':" (Path.to_string ocamlc)
-      ; Pp.text msg
-      ]
-;;
-*)
-
 (*  New instrumented config approach *)
-let make_ocaml_config ~env:_ ~ocamlc =
+let make_ocaml_config ~env:_ ~get_ocamlc_path =
   (*  instrumented config that will run ocamlc -config on each field access *)
   let ocaml_config =
-    Ocaml_config.create_instrumented ~ocamlc_path:(Path.to_string ocamlc)
+    Ocaml_config.create_instrumented ~ocamlc_path:(Path.to_string (get_ocamlc_path ()))
   in
   (* Creating empty Vars.t (which is string String.Map.t) since it's now loading on-demand  *)
   let ocaml_config_vars = Ocaml_config.Vars.of_list_exn [] in
@@ -75,15 +49,27 @@ let make name ~which ~env ~get_ocaml_tool =
   let not_found ?hint program =
     Action.Prog.Not_found.create ?hint ~context:name ~loc:None ~program ()
   in
-  let* ocamlc =
-    let program = "ocamlc5555" in
+  (* creating a a special lazy ocamlc that avoids the immediate lookup *)
+  (* For now, let's use a dummy path that will be replaced when actually needed *)
+  let lazy_ocamlc =
+    lazy
+      ((* This will be the real implementation later - for now, i'm using placeholder *)
+       Path.of_string
+         "/placeholder/ocamlc5555")
+  in
+  let* temp_ocamlc =
+    let program = "ocamlc" in
+    (* Using real ocamlc instead of ocamlc5555 *)
     which program
     >>| function
     | Some x -> x
     | None -> not_found program |> Action.Prog.Not_found.raise
   in
-  let ocaml_bin = Path.parent_exn ocamlc in
-  let get_ocaml_tool prog =
+  let ocaml_bin = Path.parent_exn temp_ocamlc in
+  let* ocaml_config_vars, ocaml_config =
+    make_ocaml_config ~env ~get_ocamlc_path:(fun () -> temp_ocamlc)
+  in
+  let get_ocaml_tool_sync prog =
     get_ocaml_tool ~dir:ocaml_bin prog
     >>| function
     | Some prog -> Ok prog
@@ -98,27 +84,24 @@ let make name ~which ~env ~get_ocaml_tool =
       in
       Error (not_found ~hint prog)
   in
-  let* ocaml_config_vars, ocaml_config = make_ocaml_config ~env ~ocamlc in
-  let* ocamlopt = get_ocaml_tool "ocamlopt"
-  and* ocaml = get_ocaml_tool "ocaml"
-  and* ocamldep = get_ocaml_tool "ocamldep"
-  and* ocamlmklib = get_ocaml_tool "ocamlmklib"
-  and* ocamlobjinfo = get_ocaml_tool "ocamlobjinfo" in
+  let* ocaml = get_ocaml_tool_sync "ocaml"
+  and* ocamlmklib = get_ocaml_tool_sync "ocamlmklib"
+  and* ocamlobjinfo = get_ocaml_tool_sync "ocamlobjinfo" in
   let version = Ocaml.Version.of_ocaml_config ocaml_config in
   let builtins = make_builtins ~version ~ocaml_config in
   Memo.return
     { bin_dir = ocaml_bin
     ; ocaml
-    ; ocamlc = lazy ocamlc (* storing this as a lazy value*)
-    ; ocamlopt = lazy ocamlopt
-    ; ocamldep
+    ; ocamlc = lazy_ocamlc (* This is the lazy one that won't cause immediate lookup *)
+    ; ocamlopt = lazy (Ok temp_ocamlc)
+    ; ocamldep = lazy (Ok temp_ocamlc)
     ; ocamlmklib
     ; ocamlobjinfo
     ; ocaml_config
     ; ocaml_config_vars
     ; version
     ; builtins = Memo.Lazy.force builtins
-    ; lib_config = Lib_config.create ocaml_config ~ocamlopt
+    ; lib_config = Lib_config.create ocaml_config ~ocamlopt:(Ok temp_ocamlc)
     }
 ;;
 
@@ -156,8 +139,6 @@ let of_binaries ~path name env binaries =
   make name ~env ~get_ocaml_tool ~which
 ;;
 
-(* Seems wrong to support this at the level of the engine. This is easily
-   implemented at the level of the rules and is noly needed for windows *)
 let register_response_file_support t =
   if Ocaml.Version.supports_response_file t.version
   then (
@@ -165,7 +146,7 @@ let register_response_file_support t =
     Result.iter t.ocaml ~f:set;
     set (Lazy.force t.ocamlc);
     Result.iter (Lazy.force t.ocamlopt) ~f:set;
-    Result.iter t.ocamldep ~f:set;
+    Result.iter (Lazy.force t.ocamldep) ~f:set;
     if Ocaml.Version.ocamlmklib_supports_response_file t.version
     then Result.iter ~f:set t.ocamlmklib)
 ;;

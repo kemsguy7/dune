@@ -137,7 +137,7 @@ let deps_of
   let* () =
     let ocamldep =
       (let+ ocaml = Context.ocaml context in
-       ocaml.ocamldep)
+       Lazy.force ocaml.ocamldep)
       |> Action_builder.of_memo
     in
     Super_context.add_rule
