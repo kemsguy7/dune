@@ -5,7 +5,7 @@ type t =
   { bin_dir : Path.t
   ; ocaml : Action.Prog.t
   ; ocamlc : Path.t Lazy.t
-  ; ocamlopt : Action.Prog.t
+  ; ocamlopt : Action.Prog.t Lazy.t
   ; ocamldep : Action.Prog.t
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t
@@ -62,11 +62,11 @@ let make_ocaml_config ~env:_ ~ocamlc =
 let compiler t (mode : Ocaml.Mode.t) =
   match mode with
   | Byte -> Ok (Lazy.force t.ocamlc)
-  | Native -> t.ocamlopt
+  | Native -> Lazy.force t.ocamlopt
 ;;
 
 let best_mode t : Mode.t =
-  match t.ocamlopt with
+  match Lazy.force t.ocamlopt with
   | Ok _ -> Native
   | Error _ -> Byte
 ;;
@@ -110,7 +110,7 @@ let make name ~which ~env ~get_ocaml_tool =
     { bin_dir = ocaml_bin
     ; ocaml
     ; ocamlc = lazy ocamlc (* storing this as a lazy value*)
-    ; ocamlopt
+    ; ocamlopt = lazy ocamlopt
     ; ocamldep
     ; ocamlmklib
     ; ocamlobjinfo
@@ -164,7 +164,7 @@ let register_response_file_support t =
     let set prog = Response_file.set ~prog (Zero_terminated_strings "-args0") in
     Result.iter t.ocaml ~f:set;
     set (Lazy.force t.ocamlc);
-    Result.iter t.ocamlopt ~f:set;
+    Result.iter (Lazy.force t.ocamlopt) ~f:set;
     Result.iter t.ocamldep ~f:set;
     if Ocaml.Version.ocamlmklib_supports_response_file t.version
     then Result.iter ~f:set t.ocamlmklib)

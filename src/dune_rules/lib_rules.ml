@@ -359,7 +359,7 @@ let build_stubs lib ~cctx ~dir ~expander ~requires ~dir_contents ~vlib_stubs_o_f
 let build_shared (lib : Library.t) ~native_archives ~sctx ~dir ~flags =
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
-  Memo.Result.iter ocaml.ocamlopt ~f:(fun ocamlopt ->
+  Memo.Result.iter (Lazy.force ocaml.ocamlopt) ~f:(fun ocamlopt ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml Native))
     ; Hidden_deps
         (let ext_lib = ocaml.lib_config.ext_lib in

@@ -6,7 +6,7 @@ type t =
   { bin_dir : Path.t
   ; ocaml : Action.Prog.t
   ; ocamlc : Path.t Lazy.t 
-  ; ocamlopt : Action.Prog.t
+  ; ocamlopt : Action.Prog.t Lazy.t 
   ; ocamldep : Action.Prog.t
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t

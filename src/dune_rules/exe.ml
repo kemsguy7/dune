@@ -59,7 +59,7 @@ module Linkage = struct
   let custom = custom_with_ext ~ext:".exe"
 
   let native_or_custom (ocaml : Ocaml_toolchain.t) =
-    match ocaml.ocamlopt with
+    match Lazy.force ocaml.ocamlopt with
     | Error _ -> custom ocaml.version
     | Ok _ -> native
   ;;
@@ -103,7 +103,7 @@ module Linkage = struct
                Byte_with_stubs_statically_linked_in
            | Native -> Native
            | Best ->
-             if Result.is_ok ocaml.ocamlopt
+             if Result.is_ok (Lazy.force ocaml.ocamlopt)
              then Native
              else Byte_with_stubs_statically_linked_in)
         | Jsoo _ -> assert false (* Handled above *)
