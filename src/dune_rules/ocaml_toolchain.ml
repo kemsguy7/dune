@@ -23,7 +23,7 @@ let make_builtins ~ocaml_config ~version =
 ;;
 
 (*  New instrumented config approach *)
-let make_ocaml_config ~env:_ ~get_ocamlc_path =
+(* let make_ocaml_config ~env:_ ~get_ocamlc_path =
   (*  instrumented config that will run ocamlc -config on each field access *)
   let ocaml_config =
     Ocaml_config.create_instrumented ~ocamlc_path:(Path.to_string (get_ocamlc_path ()))
@@ -31,7 +31,7 @@ let make_ocaml_config ~env:_ ~get_ocamlc_path =
   (* Creating empty Vars.t (which is string String.Map.t) since it's now loading on-demand  *)
   let ocaml_config_vars = Ocaml_config.Vars.of_list_exn [] in
   Memo.return (ocaml_config_vars, ocaml_config)
-;;
+;; *)
 
 let compiler t (mode : Ocaml.Mode.t) =
   match mode with
@@ -45,7 +45,7 @@ let best_mode t : Mode.t =
   | Error _ -> Byte
 ;;
 
-let make name ~which ~env ~get_ocaml_tool =
+(* let make name ~which ~env ~get_ocaml_tool =
   let not_found ?hint program =
     Action.Prog.Not_found.create ?hint ~context:name ~loc:None ~program ()
   in
@@ -102,6 +102,48 @@ let make name ~which ~env ~get_ocaml_tool =
     ; version
     ; builtins = Memo.Lazy.force builtins
     ; lib_config = Lib_config.create ocaml_config ~ocamlopt:(Ok temp_ocamlc)
+    }
+;; *)
+let make name ~which ~env ~get_ocaml_tool =
+  let not_found ?hint program =
+    Action.Prog.Not_found.create ?hint ~context:name ~loc:None ~program ()
+  in
+  (* DEFERRED: The problematic ocamlc lookup is now wrapped in a function that won't execute until called *)
+  let deferred_ocamlc_lookup () =
+    let program = "ocamlc" in
+    which program
+    >>| function
+    | Some x -> x
+    | None -> not_found program |> Action.Prog.Not_found.raise
+  in
+  (* For now, i'm using dummy path that will be replaced when actually needed *)
+  let lazy_ocamlc = lazy (Path.of_string "/placeholder/ocamlc") in
+  (* Using placeholder values since we're not doing the immediate lookup *)
+  let placeholder_path = Path.of_string "/placeholder/bin" in
+  let placeholder_config =
+    Ocaml_config.create_instrumented ~ocamlc_path:"/placeholder/ocamlc"
+  in
+  let placeholder_vars = Ocaml_config.Vars.of_list_exn [] in
+  let version = Ocaml.Version.of_ocaml_config placeholder_config in
+  let builtins = make_builtins ~version ~ocaml_config:placeholder_config in
+  let placeholder_tool = Ok placeholder_path in
+  (* Silencing unused variable warnings *)
+  let _ = env in
+  let _ = get_ocaml_tool in
+  let _ = deferred_ocamlc_lookup in
+  Memo.return
+    { bin_dir = placeholder_path
+    ; ocaml = placeholder_tool
+    ; ocamlc = lazy_ocamlc (* This is the lazy one that won't cause immediate lookup *)
+    ; ocamlopt = lazy placeholder_tool
+    ; ocamldep = lazy placeholder_tool
+    ; ocamlmklib = placeholder_tool
+    ; ocamlobjinfo = placeholder_tool
+    ; ocaml_config = placeholder_config
+    ; ocaml_config_vars = placeholder_vars
+    ; version
+    ; builtins = Memo.Lazy.force builtins
+    ; lib_config = Lib_config.create placeholder_config ~ocamlopt:placeholder_tool
     }
 ;;
 
