@@ -361,7 +361,7 @@ let ocamlc_i ~deps cctx (m : Module.t) ~output =
        (let open Action_builder.With_targets.O in
         Action_builder.with_no_targets cm_deps
         >>> Command.run
-              (Ok ocaml.ocamlc)
+              (Ok (Lazy.force ocaml.ocamlc))
               ~dir:(Path.build (Context.build_dir ctx))
               ~stdout_to:output
               [ Command.Args.dyn ocaml_flags

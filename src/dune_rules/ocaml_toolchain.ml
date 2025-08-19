@@ -4,8 +4,8 @@ open Memo.O
 type t =
   { bin_dir : Path.t
   ; ocaml : Action.Prog.t
-  ; ocamlc : Path.t
-  ; ocamlopt : Action.Prog.t
+  ; ocamlc : Path.t Lazy.t
+  ; ocamlopt : Action.Prog.t Memo.t
   ; ocamldep : Action.Prog.t
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t
@@ -48,14 +48,15 @@ let make_ocaml_config ~env ~ocamlc =
 
 let compiler t (mode : Ocaml.Mode.t) =
   match mode with
-  | Byte -> Ok t.ocamlc
+  | Byte -> Memo.return (Ok (Lazy.force t.ocamlc))
   | Native -> t.ocamlopt
 ;;
 
-let best_mode t : Mode.t =
-  match t.ocamlopt with
-  | Ok _ -> Native
-  | Error _ -> Byte
+let best_mode t : Mode.t Memo.t =
+  let+ ocamlopt_result = t.ocamlopt in
+  match ocamlopt_result with
+  | Ok _ -> Mode.Native
+  | Error _ -> Mode.Byte
 ;;
 
 let make name ~which ~env ~get_ocaml_tool =
@@ -64,28 +65,30 @@ let make name ~which ~env ~get_ocaml_tool =
   in
   let* ocamlc =
     let program = "ocamlc" in
-    which program
-    >>| function
-    | Some x -> x
-    | None -> not_found program |> Action.Prog.Not_found.raise
+    let+ result = which program in
+    match result with
+    | Some x -> lazy x
+    | None -> lazy (not_found program |> Action.Prog.Not_found.raise)
   in
-  let ocaml_bin = Path.parent_exn ocamlc in
+  let ocaml_bin = Lazy.map ~f:Path.parent_exn ocamlc in
   let get_ocaml_tool prog =
-    get_ocaml_tool ~dir:ocaml_bin prog
-    >>| function
+    let+ result = get_ocaml_tool ~dir:ocaml_bin prog in
+    match result with
     | Some prog -> Ok prog
     | None ->
       let hint =
         sprintf
           "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
-          (Path.to_string ocaml_bin)
-          (Path.to_string ocaml_bin)
+          (Path.to_string (Lazy.force ocaml_bin))
+          (Path.to_string (Lazy.force ocaml_bin))
           prog
           (Context_name.to_string name)
       in
       Error (not_found ~hint prog)
   in
-  let* ocaml_config_vars, ocaml_config = make_ocaml_config ~env ~ocamlc in
+  let* ocaml_config_vars, ocaml_config =
+    make_ocaml_config ~env ~ocamlc:(Lazy.force ocamlc)
+  in
   let* ocamlopt = get_ocaml_tool "ocamlopt"
   and* ocaml = get_ocaml_tool "ocaml"
   and* ocamldep = get_ocaml_tool "ocamldep"
@@ -94,10 +97,10 @@ let make name ~which ~env ~get_ocaml_tool =
   let version = Ocaml.Version.of_ocaml_config ocaml_config in
   let builtins = make_builtins ~version ~ocaml_config in
   Memo.return
-    { bin_dir = ocaml_bin
+    { bin_dir = Lazy.force ocaml_bin
     ; ocaml
     ; ocamlc
-    ; ocamlopt
+    ; ocamlopt = Memo.return ocamlopt
     ; ocamldep
     ; ocamlmklib
     ; ocamlobjinfo
@@ -114,16 +117,16 @@ let of_env_with_findlib name env findlib_config ~which =
     Memo.Option.bind findlib_config ~f:(Findlib_config.tool ~prog)
   in
   let which program =
-    get_tool_using_findlib_config program
-    >>= function
+    let* findlib_result = get_tool_using_findlib_config program in
+    match findlib_result with
     | Some x -> Memo.return (Some x)
     | None -> which program
   in
   let get_ocaml_tool ~dir prog =
-    get_tool_using_findlib_config prog
-    >>= function
+    let* findlib_result = get_tool_using_findlib_config prog in
+    match findlib_result with
     | Some x -> Memo.return (Some x)
-    | None -> Which.best_in_dir ~dir prog
+    | None -> Which.best_in_dir ~dir:(Lazy.force dir) prog
   in
   make name ~env ~get_ocaml_tool ~which
 ;;
@@ -144,17 +147,20 @@ let of_binaries ~path name env binaries =
 ;;
 
 (* Seems wrong to support this at the level of the engine. This is easily
-   implemented at the level of the rules and is noly needed for windows *)
+   implemented at the level of the rules and is only needed for windows *)
 let register_response_file_support t =
   if Ocaml.Version.supports_response_file t.version
   then (
     let set prog = Response_file.set ~prog (Zero_terminated_strings "-args0") in
     Result.iter t.ocaml ~f:set;
-    set t.ocamlc;
-    Result.iter t.ocamlopt ~f:set;
+    set (Lazy.force t.ocamlc);
+    let* ocamlopt = t.ocamlopt in
+    Result.iter ocamlopt ~f:set;
     Result.iter t.ocamldep ~f:set;
     if Ocaml.Version.ocamlmklib_supports_response_file t.version
-    then Result.iter ~f:set t.ocamlmklib)
+    then Result.iter ~f:set t.ocamlmklib;
+    Memo.return ())
+  else Memo.return ()
 ;;
 
 let check_fdo_support { version; lib_config = { has_native; _ }; ocaml_config; _ } name =
@@ -174,7 +180,7 @@ let check_fdo_support { version; lib_config = { has_native; _ }; ocaml_config; _
          experimental and will be removed when ocamlfdo is fully integrated into
          the toolchain. When using a dev version of ocamlopt that does not
          support the required options, fdo builds will fail because the compiler
-         won't recognize the options. Normals builds won't be affected. *) )
+         won't recognize the options. Normal builds won't be affected. *) )
   else if not (Ocaml.Version.supports_split_at_emit version)
   then
     if not (Ocaml.Version.supports_function_sections version)

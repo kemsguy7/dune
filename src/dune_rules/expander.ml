@@ -505,7 +505,7 @@ let expand_pform_var (context : Context.t) ~dir ~source (var : Pform.Var.t) =
   | Ocamlc ->
     static
     @@ let+ ocaml = ocaml in
-       path ocaml.ocamlc
+       path (Lazy.force ocaml.ocamlc)
   | Ocamlopt ->
     static
     @@ let+ ocaml = ocaml in
