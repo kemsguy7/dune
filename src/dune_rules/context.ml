@@ -463,7 +463,7 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
           "loading the OCaml compiler for context %S"
           (Context_name.to_string builder.name))
       (fun () ->
-         let+ ocaml, env =
+         let* ocaml, env_kind =
            let* findlib = Memo.Lazy.force findlib
            and* env = builder.env in
            let toolchain kind =
@@ -471,7 +471,7 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
                Ocaml_toolchain.of_env_with_findlib
                  builder.name
                  env
-                 findlib
+                 (Memo.return findlib)
                  ~which:which_outside_lockdir
              in
              toolchain, kind
@@ -487,19 +487,19 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
                 let+ toolchain, _ = Action_builder.evaluate_and_collect_facts toolchain in
                 toolchain, `Lock)
          in
-         Ocaml_toolchain.register_response_file_support ocaml;
+         let* () = Ocaml_toolchain.register_response_file_support ocaml in
          if Option.is_some builder.fdo_target_exe
          then Ocaml_toolchain.check_fdo_support ocaml builder.name;
-         ocaml, env)
+         Memo.return (ocaml, env_kind))
   in
   let default_ocamlpath =
     Memo.Lazy.create ~name:"default_ocamlpath" ~cutoff:(List.equal Path.equal) (fun () ->
-      let* ocaml, kind = Memo.Lazy.force ocaml_and_build_env_kind in
+      let* ocaml, env_kind = Memo.Lazy.force ocaml_and_build_env_kind in
       let+ default_ocamlpath =
         let* findlib = Memo.Lazy.force findlib
         and* env = builder.env in
         Build_environment_kind.query
-          ~kind
+          ~kind:env_kind
           ~findlib_toolchain:builder.findlib_toolchain
           ~env
         |> Build_environment_kind.findlib_paths ~findlib ~ocaml_bin:ocaml.bin_dir

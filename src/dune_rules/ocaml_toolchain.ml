@@ -72,7 +72,7 @@ let make name ~which ~env ~get_ocaml_tool =
   in
   let ocaml_bin = Lazy.map ~f:Path.parent_exn ocamlc in
   let get_ocaml_tool prog =
-    let+ result = get_ocaml_tool ~dir:ocaml_bin prog in
+    let+ result = get_ocaml_tool ~dir:(Lazy.force ocaml_bin) prog in
     match result with
     | Some prog -> Ok prog
     | None ->
@@ -113,8 +113,11 @@ let make name ~which ~env ~get_ocaml_tool =
 ;;
 
 let of_env_with_findlib name env findlib_config ~which =
+  let* findlib_config = findlib_config in
   let get_tool_using_findlib_config prog =
-    Memo.Option.bind findlib_config ~f:(Findlib_config.tool ~prog)
+    match findlib_config with
+    | None -> Memo.return None
+    | Some config -> Findlib_config.tool ~prog config
   in
   let which program =
     let* findlib_result = get_tool_using_findlib_config program in
@@ -126,7 +129,7 @@ let of_env_with_findlib name env findlib_config ~which =
     let* findlib_result = get_tool_using_findlib_config prog in
     match findlib_result with
     | Some x -> Memo.return (Some x)
-    | None -> Which.best_in_dir ~dir:(Lazy.force dir) prog
+    | None -> Which.best_in_dir ~dir prog
   in
   make name ~env ~get_ocaml_tool ~which
 ;;
