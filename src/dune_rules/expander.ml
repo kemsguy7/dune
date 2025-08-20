@@ -508,8 +508,9 @@ let expand_pform_var (context : Context.t) ~dir ~source (var : Pform.Var.t) =
        path (Lazy.force ocaml.ocamlc)
   | Ocamlopt ->
     static
-    @@ let+ ocaml = ocaml in
-       get_prog ocaml.ocamlopt
+    @@ let* ocaml = ocaml in
+       let+ ocamlopt_result = ocaml.ocamlopt in
+       get_prog ocamlopt_result
   | Make -> Direct (Without (make (Dune_lang.Template.Pform.loc source) context))
   | Dev_null -> path Dev_null.path |> Memo.return |> static
   | Ocaml_stdlib_dir | Ext_obj | Ext_lib | Ext_dll | Ccomp_type ->
