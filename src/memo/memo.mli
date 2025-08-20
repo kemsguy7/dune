@@ -328,7 +328,7 @@ module Lazy : sig
     :  ?cutoff:('a -> 'a -> bool)
     -> ?name:string
     -> ?human_readable_description:(unit -> User_message.Style.t Pp.t)
-    -> (unit -> 'a memo)
+    -> (unit -> 'a memo) 
     -> 'a t
 
   val force : 'a t -> 'a memo

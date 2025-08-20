@@ -73,6 +73,7 @@ let make name ~which ~env ~get_ocaml_tool =
   let ocaml_bin = Lazy.map ~f:Path.parent_exn ocamlc in
   let get_ocaml_tool prog =
     let+ result = get_ocaml_tool ~dir:(Lazy.force ocaml_bin) prog in
+    let _x = Memo.Lazy.create (fun () -> Memo.return "ocaml") in
     match result with
     | Some prog -> Ok prog
     | None ->

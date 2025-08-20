@@ -39,8 +39,6 @@ let lib_args (mode : Mode.t) ~stub_mode archive =
   @ [ "-cclib"; lname ]
 ;;
 
-let y = Memo.return; 
-
 (* Build an OCaml library. *)
 let build_lib
       (lib : Library.t)
