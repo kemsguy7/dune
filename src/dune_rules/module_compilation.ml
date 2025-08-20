@@ -115,12 +115,10 @@ let build_cm
       let+ melc = Melange_binary.melc sctx ~loc ~dir in
       Some melc
     | Ocaml mode ->
-      Memo.return
-        (let compiler = Ocaml_toolchain.compiler ocaml mode in
-         (* TODO one day remove this silly optimization *)
-         match compiler with
-         | Ok _ as s -> Some s
-         | Error _ -> None)
+      let+ compiler_result = Ocaml_toolchain.compiler ocaml mode in
+      (match compiler_result with
+       | Ok _ -> Some compiler_result
+       | Error _ -> None)
   in
   (let open Option.O in
    let* compiler = compiler in
