@@ -28,7 +28,7 @@ val make
   :  Context_name.t
   -> which:(string -> Path.t option Memo.t)
   -> env:Env.t
-  -> get_ocaml_tool:(dir:Path.t -> string -> Path.t option Memo.t)
+  -> get_ocaml_tool:(dir:Path.t -> string -> Path.t option )
   -> t Memo.t
 
 val of_binaries : path:Path.t list -> Context_name.t -> Env.t -> Path.Set.t -> t Memo.t

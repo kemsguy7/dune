@@ -70,9 +70,11 @@ let make name ~which ~env ~get_ocaml_tool =
     | None -> not_found program |> Action.Prog.Not_found.raise
   in
   let ocaml_bin = Path.parent_exn ocamlc in
-  let get_ocaml_tool prog =
-    get_ocaml_tool ~dir:ocaml_bin prog
-    >>| function
+  (* I Removed the local get_ocaml_tool function that was returning Memo.t *)
+  let* ocaml_config_vars, ocaml_config = make_ocaml_config ~env ~ocamlc in
+  (* Now i'm calling get_ocaml_tool directly and handling the results *)
+  let ocamlopt =
+    match get_ocaml_tool ~dir:ocaml_bin "ocamlopt" with
     | Some prog -> Ok prog
     | None ->
       let hint =
@@ -80,17 +82,63 @@ let make name ~which ~env ~get_ocaml_tool =
           "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
           (Path.to_string ocaml_bin)
           (Path.to_string ocaml_bin)
-          prog
+          "ocamlopt"
           (Context_name.to_string name)
       in
-      Error (not_found ~hint prog)
+      Error (not_found ~hint "ocamlopt")
+  and ocaml =
+    match get_ocaml_tool ~dir:ocaml_bin "ocaml" with
+    | Some prog -> Ok prog
+    | None ->
+      let hint =
+        sprintf
+          "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
+          (Path.to_string ocaml_bin)
+          (Path.to_string ocaml_bin)
+          "ocaml"
+          (Context_name.to_string name)
+      in
+      Error (not_found ~hint "ocaml")
+  and ocamldep =
+    match get_ocaml_tool ~dir:ocaml_bin "ocamldep" with
+    | Some prog -> Ok prog
+    | None ->
+      let hint =
+        sprintf
+          "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
+          (Path.to_string ocaml_bin)
+          (Path.to_string ocaml_bin)
+          "ocamldep"
+          (Context_name.to_string name)
+      in
+      Error (not_found ~hint "ocamldep")
+  and ocamlmklib =
+    match get_ocaml_tool ~dir:ocaml_bin "ocamlmklib" with
+    | Some prog -> Ok prog
+    | None ->
+      let hint =
+        sprintf
+          "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
+          (Path.to_string ocaml_bin)
+          (Path.to_string ocaml_bin)
+          "ocamlmklib"
+          (Context_name.to_string name)
+      in
+      Error (not_found ~hint "ocamlmklib")
+  and ocamlobjinfo =
+    match get_ocaml_tool ~dir:ocaml_bin "ocamlobjinfo" with
+    | Some prog -> Ok prog
+    | None ->
+      let hint =
+        sprintf
+          "ocamlc found in %s, but %s/%s doesn't exist (context: %s)"
+          (Path.to_string ocaml_bin)
+          (Path.to_string ocaml_bin)
+          "ocamlobjinfo"
+          (Context_name.to_string name)
+      in
+      Error (not_found ~hint "ocamlobjinfo")
   in
-  let* ocaml_config_vars, ocaml_config = make_ocaml_config ~env ~ocamlc in
-  let* ocamlopt = get_ocaml_tool "ocamlopt"
-  and* ocaml = get_ocaml_tool "ocaml"
-  and* ocamldep = get_ocaml_tool "ocamldep"
-  and* ocamlmklib = get_ocaml_tool "ocamlmklib"
-  and* ocamlobjinfo = get_ocaml_tool "ocamlobjinfo" in
   let version = Ocaml.Version.of_ocaml_config ocaml_config in
   let builtins = make_builtins ~version ~ocaml_config in
   Memo.return
