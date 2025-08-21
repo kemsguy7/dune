@@ -176,7 +176,7 @@ let build_c_program
   let exe =
     let open Action_builder.O in
     let* ocaml = Action_builder.of_memo ocaml in
-    Ocaml_config.c_compiler ocaml.ocaml_config
+    Ocaml_config.c_compiler (Lazy.force ocaml.ocaml_config)
     |> Super_context.resolve_program ~loc:None ~dir sctx
   in
   let project = Scope.project scope in
@@ -185,7 +185,7 @@ let build_c_program
       let open Action_builder.O in
       let+ ocaml = Action_builder.of_memo ocaml in
       let use_standard_flags = Dune_project.use_standard_c_and_cxx_flags project in
-      let cfg = ocaml.ocaml_config in
+      let cfg = Lazy.force ocaml.ocaml_config in
       let fdo_flags = Command.Args.As (Fdo.c_flags ctx) in
       match use_standard_flags with
       | Some true -> fdo_flags
@@ -212,7 +212,7 @@ let build_c_program
   let include_args =
     let open Action_builder.O in
     let* ocaml = Action_builder.of_memo ocaml in
-    let ocaml_where = ocaml.lib_config.stdlib_dir in
+    let ocaml_where = (Lazy.force ocaml.lib_config).stdlib_dir in
     (* XXX: need glob dependency *)
     let open Action_builder.O in
     let ctypes = Lib_name.of_string "ctypes" in
@@ -220,7 +220,7 @@ let build_c_program
       Lib.DB.resolve (Scope.libs scope) (Loc.none, ctypes) |> Resolve.Memo.read
     in
     let ctypes_include_dirs =
-      Lib_flags.L.include_paths [ lib ] (Ocaml Native) ocaml.lib_config
+      Lib_flags.L.include_paths [ lib ] (Ocaml Native) (Lazy.force ocaml.lib_config)
       |> Path.Set.to_list
     in
     let include_dirs = ocaml_where :: ctypes_include_dirs in
@@ -375,7 +375,7 @@ let gen_rules ~cctx ~(buildable : Buildable.t) ~loc ~scope ~dir ~sctx =
     let* () =
       let foreign_archives_deps =
         let { Lib_config.ext_lib; ext_dll; _ } =
-          (Compilation_context.ocaml cctx).lib_config
+          Lazy.force (Compilation_context.ocaml cctx).lib_config
         in
         List.concat_map buildable.foreign_archives ~f:(fun (_loc, archive) ->
           let mode = Mode.Select.All in

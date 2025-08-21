@@ -24,7 +24,11 @@ let link_deps sctx link =
     ocaml.lib_config
   in
   Memo.parallel_map link ~f:(fun t ->
-    Dune_rules.Lib_flags.link_deps sctx t Dune_rules.Link_mode.Byte lib_config)
+    Dune_rules.Lib_flags.link_deps
+      sctx
+      t
+      Dune_rules.Link_mode.Byte
+      (Lazy.force lib_config))
   >>| List.concat
 ;;
 
@@ -72,7 +76,7 @@ let term =
         ocaml.lib_config
       in
       let include_paths =
-        Dune_rules.Lib_flags.L.toplevel_include_paths requires lib_config
+        Dune_rules.Lib_flags.L.toplevel_include_paths requires (Lazy.force lib_config)
       in
       let+ files_to_load = files_to_load_of_requires sctx requires in
       Dune_rules.Toplevel.print_toplevel_init_file
@@ -129,7 +133,7 @@ module Module = struct
       let include_paths =
         let libs =
           let lib_config = (Compilation_context.ocaml cctx).lib_config in
-          Dune_rules.Lib_flags.L.toplevel_include_paths requires lib_config
+          Dune_rules.Lib_flags.L.toplevel_include_paths requires (Lazy.force lib_config)
         in
         Path.Set.add libs (Path.build (Obj_dir.byte_dir private_obj_dir))
       in

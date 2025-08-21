@@ -195,8 +195,8 @@ module Linker_script = struct
       if
         let ocaml = Compilation_context.ocaml cctx in
         Path.equal name fdo_target_exe
-        && (Ocaml.Version.supports_function_sections ocaml.version
-            || Ocaml_config.is_dev_version ocaml.ocaml_config)
+        && (Ocaml.Version.supports_function_sections (Lazy.force ocaml.version)
+            || Ocaml_config.is_dev_version (Lazy.force ocaml.ocaml_config))
       then Some (linker_script_rule cctx fdo_target_exe)
       else None
   ;;

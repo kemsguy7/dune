@@ -155,7 +155,7 @@ let libs db (context : Context.t) =
           (List.map (Nonempty_list.to_list exes.names) ~f:snd)
           exes.package
           Item.Kind.Executables
-          (exes_extensions ocaml.lib_config exes.modes)
+          (exes_extensions (Lazy.force ocaml.lib_config) exes.modes)
         >>| List.singleton
       | Dune_rules.Library.T lib ->
         resolve_libs
@@ -178,7 +178,7 @@ let libs db (context : Context.t) =
           (List.map (Nonempty_list.to_list tests.exes.names) ~f:snd)
           (if Option.is_none tests.package then tests.exes.package else tests.package)
           Item.Kind.Tests
-          (exes_extensions ocaml.lib_config tests.exes.modes)
+          (exes_extensions (Lazy.force ocaml.lib_config) tests.exes.modes)
         >>| List.singleton
       | _ -> Memo.return [])
     >>| List.concat)

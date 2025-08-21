@@ -54,7 +54,7 @@ let term =
   in
   Hooks.End_of_build.run ();
   let env =
-    Dune_rules.Lib_flags.L.toplevel_ld_paths requires lib_config
+    Dune_rules.Lib_flags.L.toplevel_ld_paths requires (Lazy.force lib_config)
     |> Path.Set.fold
          ~f:(fun dir env -> Env_path.cons ~var:Ocaml.Env.caml_ld_library_path env ~dir)
          ~init:env

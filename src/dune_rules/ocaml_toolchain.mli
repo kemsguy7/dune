@@ -3,18 +3,18 @@
 open Import
 
 type t =
-  { bin_dir : Path.t
+  { bin_dir : Action.Prog.t
   ; ocaml : Action.Prog.t
-  ; ocamlc : Path.t
+  ; ocamlc : Action.Prog.t
   ; ocamlopt : Action.Prog.t
   ; ocamldep : Action.Prog.t
   ; ocamlmklib : Action.Prog.t
   ; ocamlobjinfo : Action.Prog.t
-  ; ocaml_config : Ocaml_config.t
-  ; ocaml_config_vars : Ocaml_config.Vars.t
-  ; version : Ocaml.Version.t
-  ; builtins : Meta.Simplified.t Package.Name.Map.t Memo.t
-  ; lib_config : Lib_config.t
+  ; ocaml_config : Ocaml_config.t Lazy.t
+  ; ocaml_config_vars : Ocaml_config.Vars.t Lazy.t
+  ; version : Ocaml.Version.t Lazy.t
+  ; builtins : Meta.Simplified.t Package.Name.Map.t Memo.Lazy.t
+  ; lib_config : Lib_config.t Lazy.t
   }
 
 val of_env_with_findlib

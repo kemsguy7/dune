@@ -323,7 +323,7 @@ module Script = struct
     let* () =
       Jbuild_plugin.create_plugin_wrapper
         (Context.name context)
-        ocaml.ocaml_config
+        (Lazy.force ocaml.ocaml_config)
         ~exec_dir:(Path.source eval.dir)
         ~plugin:(In_source_dir file)
         ~wrapper

@@ -21,7 +21,7 @@ let rules ~sctx ~dir =
     Action_builder.of_memo
     @@
     let+ ocaml = Super_context.context sctx |> Context.ocaml in
-    ocaml.ocaml_config
+    Lazy.force ocaml.ocaml_config
   in
   (* let tmp = Path.External.of_string (Filename.get_temp_dir_name ()) in *)
   let header_file = Path.Build.relative dir "header_check.h" in

@@ -1960,7 +1960,8 @@ module DB = struct
     and+ findlib = Findlib.create (Context.name context) in
     create_from_findlib
       findlib
-      ~has_bigarray_library:(Ocaml.Version.has_bigarray_library ocaml.version)
+      ~has_bigarray_library:
+        (Ocaml.Version.has_bigarray_library (Lazy.force ocaml.version))
       ~instrument_with:(Context.instrument_with context)
   ;;
 

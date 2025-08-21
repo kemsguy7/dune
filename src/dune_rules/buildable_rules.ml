@@ -16,7 +16,7 @@ let ocaml_flags t ~dir (spec : Dune_lang.Ocaml_flags.Spec.t) =
   | true ->
     let+ ocaml_version =
       let+ ocaml = Super_context.context t |> Context.ocaml in
-      ocaml.version
+      Lazy.force ocaml.version
     in
     Ocaml_flags.with_vendored_flags ~ocaml_version flags
 ;;

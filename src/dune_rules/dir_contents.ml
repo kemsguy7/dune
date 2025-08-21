@@ -255,7 +255,7 @@ end = struct
           let ctx = Super_context.context sctx in
           let lib_config =
             let+ ocaml = Context.ocaml ctx in
-            ocaml.lib_config
+            Lazy.force ocaml.lib_config
           in
           let stanzas = Dune_file.stanzas d in
           let project = Dune_file.project d in
@@ -348,7 +348,7 @@ end = struct
            let dirs = { Source_file_dir.dir; path_to_root = []; files } :: subdirs in
            let lib_config =
              let+ ocaml = Context.ocaml ctx in
-             ocaml.lib_config
+             Lazy.force ocaml.lib_config
            in
            let ml =
              Memo.lazy_ (fun () ->

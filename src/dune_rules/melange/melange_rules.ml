@@ -76,7 +76,9 @@ let modules_in_obj_dir ~sctx ~scope ~preprocess modules =
       ~instrumentation_backend:(Lib.DB.instrumentation_backend (Scope.libs scope))
     |> Resolve.Memo.read_memo
   in
-  let pped_map = Staged.unstage (Pp_spec.pped_modules_map preprocess version) in
+  let pped_map =
+    Staged.unstage (Pp_spec.pped_modules_map preprocess (Lazy.force version))
+  in
   Modules.map_user_written modules ~f:(fun m -> Memo.return @@ pped_map m)
 ;;
 
@@ -349,7 +351,9 @@ let setup_emit_cmj_rules
     let* () = Module_compilation.build_all cctx in
     let* requires_compile = Compilation_context.requires_compile cctx in
     let* requires_hidden = Compilation_context.requires_hidden cctx in
-    let stdlib_dir = (Compilation_context.ocaml cctx).lib_config.stdlib_dir in
+    let stdlib_dir =
+      (Lazy.force (Compilation_context.ocaml cctx).lib_config).stdlib_dir
+    in
     let+ () =
       let emit_and_libs_deps =
         let target_dir = Path.Build.relative dir mel.target in
@@ -507,7 +511,7 @@ let setup_entries_js
       ocaml.lib_config
     in
     let requires_link = Resolve.return requires_link in
-    cmj_includes ~requires_link ~scope lib_config
+    cmj_includes ~requires_link ~scope (Lazy.force lib_config)
   and* compile_flags = melange_compile_flags ~sctx ~dir mel in
   let output = Output_kind.Private_library_or_emit target_dir in
   let obj_dir = Obj_dir.of_local local_obj_dir in
@@ -591,7 +595,7 @@ let setup_js_rules_libraries =
           Memo.Lazy.force (Lib.Compile.requires_link lib_compile_info)
           |> Resolve.Memo.map ~f:(with_vlib_implementations lib)
         in
-        cmj_includes ~requires_link ~scope lib_config
+        cmj_includes ~requires_link ~scope (Lazy.force lib_config)
       and* compile_flags = melange_compile_flags ~sctx ~dir mel in
       let+ () =
         setup_runtime_assets_rules
@@ -647,7 +651,7 @@ let setup_js_rules_libraries =
                     path in `import` / `require`. *)
                  lib :: requires_link
                in
-               cmj_includes ~requires_link ~scope lib_config
+               cmj_includes ~requires_link ~scope (Lazy.force lib_config)
              in
              parallel_build_source_modules
                ~sctx

@@ -346,7 +346,7 @@ module DB = struct
     let build_dir = Context.build_dir context in
     let* lib_config =
       let+ ocaml = Context.ocaml context in
-      ocaml.lib_config
+      Lazy.force ocaml.lib_config
     in
     let instrument_with = Context.instrument_with context in
     let+ public_libs =

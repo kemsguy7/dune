@@ -576,7 +576,7 @@ let create =
       let* paths = Context.findlib_paths context
       and* lib_config =
         let+ ocaml = Context.ocaml context in
-        ocaml.lib_config
+        Lazy.force ocaml.lib_config
       in
       DB.create ~paths ~lib_config)
     |> Memo.Lazy.force)

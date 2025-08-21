@@ -172,7 +172,7 @@ let build_info_code cctx ~libs ~api_version =
 |ocaml};
   let fmt_eval : _ format6 =
     let ocaml = Compilation_context.ocaml cctx in
-    if Ocaml.Version.has_sys_opaque_identity ocaml.version
+    if Ocaml.Version.has_sys_opaque_identity (Lazy.force ocaml.version)
     then "let %s = eval (Sys.opaque_identity %S)"
     else "let %s = eval %S"
   in
@@ -264,7 +264,7 @@ let handle_special_libs cctx =
   let open Memo.O in
   let dune_site_plugin_code =
     let* () = Memo.return () in
-    let+ builtins = (Compilation_context.ocaml cctx).builtins in
+    let+ builtins = Memo.Lazy.force (Compilation_context.ocaml cctx).builtins in
     dune_site_plugins_code ~libs:all_libs ~builtins
   in
   let rec process_libs ~to_link_rev ~force_linkall libs =

@@ -415,7 +415,7 @@ module Crawl = struct
         @@ Pp_spec.pped_modules_map
              (Dune_lang.Preprocess.Per_module.without_instrumentation
                 exes.buildable.preprocess)
-             version
+             (Lazy.force version)
       in
       let deps_of module_ =
         let module_ = pp_map module_ in
@@ -484,7 +484,7 @@ module Crawl = struct
             @@ Pp_spec.pped_modules_map
                  (Dune_lang.Preprocess.Per_module.without_instrumentation
                     (Lib_info.preprocess info))
-                 version
+                 (Lazy.force version)
           in
           let deps_of module_ =
             immediate_deps_of_module

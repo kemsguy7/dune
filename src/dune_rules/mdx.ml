@@ -430,7 +430,7 @@ let mdx_prog_gen t ~sctx ~dir ~scope ~mdx_prog =
       let mode = ocaml_toolchain |> Ocaml_toolchain.best_mode in
       let open Command.Args in
       S
-        (Lib_flags.L.include_paths libs_to_include (Ocaml mode) lib_config
+        (Lib_flags.L.include_paths libs_to_include (Ocaml mode) (Lazy.force lib_config)
          |> Path.Set.to_list_map ~f:(fun p -> S [ A "--directory"; Path p ]))
     in
     let open Command.Args in
@@ -492,7 +492,7 @@ let mdx_prog_gen t ~sctx ~dir ~scope ~mdx_prog =
       cctx
       ~program:{ name; main_module_name; loc }
       ~link_args:(Action_builder.return (Command.Args.A "-linkall"))
-      ~linkages:[ Exe.Linkage.custom_with_ext ~ext ocaml_toolchain.version ]
+      ~linkages:[ Exe.Linkage.custom_with_ext ~ext (Lazy.force ocaml_toolchain.version) ]
       ~promote:None
   in
   Path.Build.relative dir (name ^ ext)

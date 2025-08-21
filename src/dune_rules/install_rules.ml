@@ -133,7 +133,7 @@ end = struct
        and+ dynamically_linked_foreign_archives =
          Context.dynamically_linked_foreign_archives ctx
        in
-       Dynlink_supported.get_ocaml_config dynlink ocaml.ocaml_config
+       Dynlink_supported.get_ocaml_config dynlink (Lazy.force ocaml.ocaml_config)
        && dynamically_linked_foreign_archives)
     >>| function
     | false -> []
@@ -180,7 +180,7 @@ end = struct
     let ctx = Super_context.context sctx in
     let* lib_config =
       let+ ocaml = Context.ocaml ctx in
-      ocaml.lib_config
+      Lazy.force ocaml.lib_config
     in
     let make_entry ?(loc = loc) = make_entry lib_subdir ~loc in
     let* expander = Super_context.expander sctx ~dir in
@@ -669,7 +669,7 @@ end = struct
             let dir = Obj_dir.obj_dir obj_dir in
             let* ext_obj =
               let+ ocaml = Context.ocaml ctx in
-              ocaml.lib_config.ext_obj
+              (Lazy.force ocaml.lib_config).ext_obj
             in
             let+ foreign_sources = Dir_contents.foreign_sources dir_contents in
             Foreign_sources.for_lib ~name foreign_sources

@@ -52,7 +52,7 @@ let build_lib
   =
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
-  let map_cclibs = cclibs ocaml.lib_config.ccomp_type ~flag:"-cclib" in
+  let map_cclibs = cclibs (Lazy.force ocaml.lib_config).ccomp_type ~flag:"-cclib" in
   Ocaml_toolchain.compiler ocaml mode
   |> Memo.Result.iter ~f:(fun compiler ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml mode))
@@ -108,7 +108,7 @@ let build_lib
     ; Deps
         (Foreign.Objects.build_paths
            lib.buildable.extra_objects
-           ~ext_obj:ocaml.lib_config.ext_obj
+           ~ext_obj:(Lazy.force ocaml.lib_config).ext_obj
            ~dir)
     ]
     |> Command.run (Ok compiler) ~dir:(Path.build (Context.build_dir ctx))
@@ -165,7 +165,7 @@ let ocamlmklib
     let cclibs =
       Action_builder.map
         c_library_flags
-        ~f:(cclibs ocaml.lib_config.ccomp_type ~flag:"-ldopt")
+        ~f:(cclibs (Lazy.force ocaml.lib_config).ccomp_type ~flag:"-ldopt")
     in
     fun ~custom ~sandbox targets ->
       let open Action_builder.With_targets.O in
@@ -185,7 +185,7 @@ let ocamlmklib
       >>| Action.Full.add_sandbox sandbox
       |> Super_context.add_rule sctx ~dir ~loc
   in
-  let { Lib_config.ext_lib; ext_dll; _ } = ocaml.lib_config in
+  let { Lib_config.ext_lib; ext_dll; _ } = Lazy.force ocaml.lib_config in
   let dynamic_target =
     Foreign.Archive.Name.dll_file archive_name ~dir ~ext_dll ~mode:stubs_mode
   in
@@ -237,7 +237,7 @@ let foreign_rules (library : Foreign_library.t) ~sctx ~expander ~dir ~dir_conten
     let* extra_o_files =
       let+ { Lib_config.ext_obj; _ } =
         let+ ocaml = Super_context.context sctx |> Context.ocaml in
-        ocaml.lib_config
+        Lazy.force ocaml.lib_config
       in
       let open Action_builder.O in
       Expander.expand_and_eval_set
@@ -308,7 +308,7 @@ let build_stubs lib ~cctx ~dir ~expander ~requires ~dir_contents ~vlib_stubs_o_f
         && modes.byte
         && Dynlink_supported.get_ocaml_config
              lib.dynlink
-             (Compilation_context.ocaml cctx).ocaml_config
+             (Lazy.force (Compilation_context.ocaml cctx).ocaml_config)
       in
       let archive_name =
         let lib_name = Lib_name.Local.to_string (snd lib.name) in
@@ -362,7 +362,7 @@ let build_shared (lib : Library.t) ~native_archives ~sctx ~dir ~flags =
   Memo.Result.iter ocaml.ocamlopt ~f:(fun ocamlopt ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml Native))
     ; Hidden_deps
-        (let ext_lib = ocaml.lib_config.ext_lib in
+        (let ext_lib = (Lazy.force ocaml.lib_config).ext_lib in
          List.rev_concat
            [ Library.foreign_lib_files lib ~dir ~ext_lib ~for_mode:(Only Byte)
            ; Library.foreign_lib_files lib ~dir ~ext_lib ~for_mode:All
@@ -405,7 +405,7 @@ let setup_build_archives (lib : Library.t) ~top_sorted_modules ~cctx ~expander ~
   let sctx = Compilation_context.super_context cctx in
   let { Lib_config.ext_obj; natdynlink_supported; _ } =
     let ocaml = Compilation_context.ocaml cctx in
-    ocaml.lib_config
+    Lazy.force ocaml.lib_config
   in
   let* () =
     Modules.With_vlib.exit_module modules
@@ -500,7 +500,7 @@ let cctx (lib : Library.t) ~sctx ~source_modules ~dir ~expander ~scope ~compile_
       let ctx = Super_context.context sctx in
       Context.ocaml ctx
     in
-    let { Lib_config.has_native; _ } = ocaml.lib_config in
+    let { Lib_config.has_native; _ } = Lazy.force ocaml.lib_config in
     Mode_conf.Lib.Set.eval_detailed lib.modes ~has_native
   in
   let package = Library.package lib in
@@ -551,7 +551,7 @@ let library_rules
   let dir = Compilation_context.dir cctx in
   let scope = Compilation_context.scope cctx in
   let* requires_compile = Compilation_context.requires_compile cctx in
-  let lib_config = (Compilation_context.ocaml cctx).lib_config in
+  let lib_config = Lazy.force (Compilation_context.ocaml cctx).lib_config in
   let top_sorted_modules =
     let impl_only = Modules.With_vlib.impl_only modules in
     Dep_graph.top_closed_implementations

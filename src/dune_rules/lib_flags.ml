@@ -213,7 +213,7 @@ module L = struct
             let+ ocaml = Super_context.context sctx |> Context.ocaml in
             ocaml.lib_config)
       in
-      to_iflags (c_include_paths ts lib_config)
+      to_iflags (c_include_paths ts (Lazy.force lib_config))
     in
     Command.Args.S [ Dyn local; Hidden_deps external_; Dyn include_flags ]
   ;;

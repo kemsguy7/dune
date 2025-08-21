@@ -180,7 +180,7 @@ let dynamically_linked_foreign_archives t =
   | false -> Memo.return false
   | true ->
     let+ ocaml = ocaml t in
-    Ocaml_config.supports_shared_libraries ocaml.ocaml_config
+    Ocaml_config.supports_shared_libraries (Lazy.force ocaml.ocaml_config)
 ;;
 
 let fdo_target_exe t = t.builder.fdo_target_exe
@@ -502,10 +502,12 @@ let create (builder : Builder.t) ~(kind : Kind.t) =
           ~kind
           ~findlib_toolchain:builder.findlib_toolchain
           ~env
-        |> Build_environment_kind.findlib_paths ~findlib ~ocaml_bin:ocaml.bin_dir
+        |> Build_environment_kind.findlib_paths
+             ~findlib
+             ~ocaml_bin:(Action.Prog.ok_exn ocaml.bin_dir)
       in
-      if Ocaml.Version.has_META_files ocaml.version
-      then ocaml.lib_config.stdlib_dir :: default_ocamlpath
+      if Ocaml.Version.has_META_files (Lazy.force ocaml.version)
+      then (Lazy.force ocaml.lib_config).stdlib_dir :: default_ocamlpath
       else default_ocamlpath)
   in
   let builder =

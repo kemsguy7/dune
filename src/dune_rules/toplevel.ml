@@ -120,7 +120,8 @@ let setup_module_rules t =
       (let* libs = Resolve.Memo.read requires_compile in
        let lib_config = (Compilation_context.ocaml t.cctx).lib_config in
        let include_dirs =
-         Path.Set.to_list (Lib_flags.L.include_paths libs (Ocaml Byte) lib_config)
+         Path.Set.to_list
+           (Lib_flags.L.include_paths libs (Ocaml Byte) (Lazy.force lib_config))
        in
        let* pp_ppx = pp_flags t in
        let pp_dirs = Source.pp_ml t.source ~include_dirs in
@@ -241,7 +242,9 @@ module Stanza = struct
     in
     let resolved = make ~cctx ~source ~preprocess:toplevel.pps expander in
     let* exe =
-      let linkage = Exe.Linkage.custom (Compilation_context.ocaml cctx).version in
+      let linkage =
+        Exe.Linkage.custom (Lazy.force (Compilation_context.ocaml cctx).version)
+      in
       setup_rules_and_return_exe_path resolved ~linkage
     in
     let symlink = Path.Build.relative dir (Path.Build.basename exe) in

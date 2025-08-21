@@ -53,7 +53,7 @@ let linkages
          L.Map.mem exes.modes L.byte
          && (not (L.Map.mem exes.modes L.native))
          && not (L.Map.mem exes.modes L.exe)
-       then [ Exe.Linkage.custom ocaml.version ]
+       then [ Exe.Linkage.custom (Lazy.force ocaml.version) ]
        else [])
     ]
 ;;
@@ -111,7 +111,7 @@ let o_files
     let* extra_o_files =
       let+ { Lib_config.ext_obj; _ } =
         let+ ocaml = Super_context.context sctx |> Context.ocaml in
-        ocaml.lib_config
+        Lazy.force ocaml.lib_config
       in
       Foreign.Objects.build_paths exes.buildable.extra_objects ~ext_obj ~dir
     in
@@ -206,7 +206,7 @@ let executables_rules
       ~melange_package_name:None
       ~package:exes.package
   in
-  let lib_config = ocaml.lib_config in
+  let lib_config = Lazy.force ocaml.lib_config in
   let* requires_compile = Compilation_context.requires_compile cctx in
   let* () =
     let* dep_graphs =

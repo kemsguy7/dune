@@ -12,8 +12,8 @@ let configurator_v2 t = Path.Build.relative (dot_dune_dir t) "configurator.v2"
 let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.t) =
   let ocaml_and_ocaml_config_vars =
     Action_builder.map ocaml ~f:(fun (ocaml : Ocaml_toolchain.t) ->
-      ( Path.to_absolute_filename ocaml.ocamlc
-      , Ocaml_config.Vars.to_list ocaml.ocaml_config_vars ))
+      ( Path.to_absolute_filename (Action.Prog.ok_exn ocaml.ocamlc)
+      , Ocaml_config.Vars.to_list (Lazy.force ocaml.ocaml_config_vars) ))
   in
   let* () =
     let fn = configurator_v1 ctx in
