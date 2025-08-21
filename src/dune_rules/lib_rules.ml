@@ -53,8 +53,8 @@ let build_lib
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
   let map_cclibs = cclibs ocaml.lib_config.ccomp_type ~flag:"-cclib" in
-  Ocaml_toolchain.compiler ocaml mode
-  |> Memo.Result.iter ~f:(fun compiler ->
+  let* compiler_result = Ocaml_toolchain.compiler ocaml mode in
+  Memo.Result.iter compiler_result ~f:(fun compiler ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml mode))
     ; Hidden_deps (Cm_files.unsorted_objects_and_cms cm_files ~mode |> Dep.Set.of_files)
     ; A "-a"
@@ -359,7 +359,8 @@ let build_stubs lib ~cctx ~dir ~expander ~requires ~dir_contents ~vlib_stubs_o_f
 let build_shared (lib : Library.t) ~native_archives ~sctx ~dir ~flags =
   let ctx = Super_context.context sctx in
   let* ocaml = Context.ocaml ctx in
-  Memo.Result.iter ocaml.ocamlopt ~f:(fun ocamlopt ->
+  let* compiler_result = ocaml.ocamlopt in
+  Memo.Result.iter compiler_result ~f:(fun ocamlopt ->
     [ Command.Args.dyn (Ocaml_flags.get flags (Ocaml Native))
     ; Hidden_deps
         (let ext_lib = ocaml.lib_config.ext_lib in

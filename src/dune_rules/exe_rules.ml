@@ -11,6 +11,7 @@ let linkages
       ~jsoo_enabled_modes
       ~jsoo_is_whole_program
   =
+  let+ ocamlopt_result = ocaml.ocamlopt in
   let module L = Executables.Link_mode in
   List.concat
     [ (let modes =
@@ -22,7 +23,6 @@ let linkages
          |> List.map ~f:(fun (mode, loc) ->
            Exe.Linkage.of_user_config ocaml ~dynamically_linked_foreign_archives ~loc mode)
        in
-       let ocamlopt_result = ocaml.ocamlopt in
        if Result.is_ok ocamlopt_result
        then modes
        else List.filter modes ~f:(fun x -> not (Exe.Linkage.is_native x)))
@@ -183,6 +183,7 @@ let executables_rules
   in
   let programs = programs ~modules ~exes in
   let* cctx =
+    let* linkages = linkages in
     let requires_compile = Lib.Compile.direct_requires compile_info in
     let requires_link = Lib.Compile.requires_link compile_info in
     let js_of_ocaml =
@@ -250,6 +251,7 @@ let executables_rules
           ]
         |> Action_builder.return
       in
+      let* linkages = linkages in
       let* o_files =
         o_files sctx ~dir ~expander ~exes ~linkages ~dir_contents ~requires_compile
       in
