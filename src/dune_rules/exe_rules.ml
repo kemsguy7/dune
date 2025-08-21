@@ -22,7 +22,8 @@ let linkages
          |> List.map ~f:(fun (mode, loc) ->
            Exe.Linkage.of_user_config ocaml ~dynamically_linked_foreign_archives ~loc mode)
        in
-       if Result.is_ok ocaml.ocamlopt
+       let ocamlopt_result = ocaml.ocamlopt in
+       if Result.is_ok ocamlopt_result
        then modes
        else List.filter modes ~f:(fun x -> not (Exe.Linkage.is_native x)))
     ; (if L.Map.existsi ~f:(fun m _ -> L.is_jsoo m) exes.modes

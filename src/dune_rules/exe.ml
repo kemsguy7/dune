@@ -59,7 +59,8 @@ module Linkage = struct
   let custom = custom_with_ext ~ext:".exe"
 
   let native_or_custom (ocaml : Ocaml_toolchain.t) =
-    match ocaml.ocamlopt with
+    let+ ocamlopt_result = ocaml.ocamlopt in
+    match ocamlopt_result with
     | Error _ -> custom ocaml.version
     | Ok _ -> native
   ;;
@@ -84,6 +85,7 @@ module Linkage = struct
         ~loc
         (m : Executables.Link_mode.t)
     =
+    let+ ocamlopt_result = ocaml.ocamlopt in
     match m with
     | Jsoo JS -> js
     | Jsoo Wasm -> wasm
@@ -103,7 +105,7 @@ module Linkage = struct
                Byte_with_stubs_statically_linked_in
            | Native -> Native
            | Best ->
-             if Result.is_ok ocaml.ocamlopt
+             if Result.is_ok ocamlopt_result
              then Native
              else Byte_with_stubs_statically_linked_in)
         | Jsoo _ -> assert false (* Handled above *)
@@ -180,10 +182,12 @@ let link_exe
     let prefix =
       Cm_files.top_sorted_objects_and_cms cm_files ~mode |> Action_builder.dyn_paths_unit
     in
-    let+ fdo_linker_script_flags =
+    let* fdo_linker_script_flags =
       let fdo_linker_script = Fdo.Linker_script.create cctx (Path.build exe) in
       Fdo.Linker_script.flags fdo_linker_script
     in
+    let ocaml = Compilation_context.ocaml cctx in
+    let+ compiler_result = Ocaml_toolchain.compiler ocaml mode in
     let open Action_builder.With_targets.O in
     (* NB. Below we take care to pass [link_args] last on the command-line for
        the following reason: [link_args] contains the list of foreign libraries
@@ -205,11 +209,10 @@ let link_exe
 
        In each case, we could then pass the argument in dependency order, which
        would provide a better fix for this issue. *)
-    let ocaml = Compilation_context.ocaml cctx in
     Action_builder.with_no_targets prefix
     >>> Command.run
           ~dir:(Path.build (Context.build_dir ctx))
-          (Ocaml_toolchain.compiler ocaml mode)
+          compiler_result
           [ Command.Args.dyn ocaml_flags
           ; A "-o"
           ; Target exe
