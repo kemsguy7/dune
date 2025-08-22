@@ -315,7 +315,10 @@ include Sub_system.Register_end_point (struct
             match mode with
             | Native -> Exe.Linkage.native
             | Best -> Exe.Linkage.native_or_custom ocaml
-            | Byte -> Exe.Linkage.custom_with_ext ~ext:".bc" (Lazy.force ocaml.version)
+            | Byte ->
+              Exe.Linkage.custom_with_ext
+                ~ext:".bc"
+                (Dune_rules__Ocaml_toolchain.version ocaml)
             | Jsoo JS -> Exe.Linkage.js
             | Jsoo Wasm -> Exe.Linkage.wasm)
         in

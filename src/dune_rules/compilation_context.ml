@@ -65,7 +65,7 @@ let eval_opaque (ocaml : Ocaml_toolchain.t) profile = function
   | Explicit b -> b
   | Inherit_from_settings ->
     Profile.is_dev profile
-    && Ocaml.Version.supports_opaque_for_mli (Lazy.force ocaml.version)
+    && Ocaml.Version.supports_opaque_for_mli (Dune_rules__Ocaml_toolchain.version ocaml)
 ;;
 
 type modules =
@@ -156,7 +156,7 @@ let create
     if Dune_project.implicit_transitive_deps project
     then Memo.Lazy.force requires_link, Resolve.Memo.return []
     else if
-      Version.supports_hidden_includes (Lazy.force ocaml.version)
+      Version.supports_hidden_includes (Dune_rules__Ocaml_toolchain.version ocaml)
       && Dune_project.dune_version project >= (3, 17)
     then (
       let requires_hidden =
@@ -213,7 +213,7 @@ let create
         ~opaque
         ~direct_requires
         ~hidden_requires
-        (Lazy.force ocaml.lib_config)
+        (Dune_rules__Ocaml_toolchain.lib_config ocaml)
   ; preprocessing
   ; opaque
   ; stdlib
@@ -251,7 +251,7 @@ let for_alias_module t alias_module =
     (* If the compiler reads the cmi for module alias even with [-w -49
        -no-alias-deps], we must sandbox the build of the alias module since the
        modules it references are built after. *)
-    if Ocaml.Version.always_reads_alias_cmi (Lazy.force t.ocaml.version)
+    if Ocaml.Version.always_reads_alias_cmi (Dune_rules__Ocaml_toolchain.version t.ocaml)
     then Sandbox_config.needs_sandboxing
     else Sandbox_config.no_special_requirements
   in
@@ -291,8 +291,8 @@ let for_root_module t root_module =
 let for_module_generated_at_link_time cctx ~requires ~module_ =
   let opaque =
     (* Cmi's of link time generated modules are compiled with -opaque, hence
-       their implementation must also be compiled with -opaque *)
-    Ocaml.Version.supports_opaque_for_mli (Lazy.force cctx.ocaml.version)
+     their implementation must also be compiled with -opaque *)
+    Ocaml.Version.supports_opaque_for_mli (Dune_rules__Ocaml_toolchain.version cctx.ocaml)
   in
   let direct_requires = requires in
   let hidden_requires = Resolve.Memo.return [] in
@@ -303,7 +303,7 @@ let for_module_generated_at_link_time cctx ~requires ~module_ =
       ~opaque
       ~direct_requires
       ~hidden_requires
-      (Lazy.force cctx.ocaml.lib_config)
+      (Dune_rules__Ocaml_toolchain.lib_config cctx.ocaml)
   in
   { cctx with
     opaque

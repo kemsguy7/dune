@@ -44,13 +44,13 @@ let rules (ocaml : Ocaml_toolchain.t) ~dir ~sandbox ~unit =
     |> Path.Build.extend_basename ~suffix:".ooi-deps"
   in
   let no_approx =
-    if Ocaml.Version.ooi_supports_no_approx (Lazy.force ocaml.version) then
+    if Ocaml.Version.ooi_supports_no_approx (Dune_rules__Ocaml_toolchain.version ocaml) then
       [Command.Args.A "-no-approx"]
     else
       []
   in
   let no_code =
-    if Ocaml.Version.ooi_supports_no_code (Lazy.force ocaml.version) then
+    if Ocaml.Version.ooi_supports_no_code (Dune_rules__Ocaml_toolchain.version ocaml) then
       [Command.Args.A "-no-code"]
     else
       []

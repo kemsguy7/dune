@@ -13,7 +13,7 @@ let setup_copy_rules_for_impl ~sctx ~dir vimpl =
   in
   let* { Lib_config.has_native; ext_obj; _ } =
     let+ ocaml = Context.ocaml ctx in
-    Lazy.force ocaml.lib_config
+    Dune_rules__Ocaml_toolchain.lib_config ocaml
   in
   let { Lib_mode.Map.ocaml = { byte; native }; melange } =
     Mode_conf.Lib.Set.eval impl.modes ~has_native
@@ -113,14 +113,16 @@ let impl sctx ~(lib : Library.t) ~scope =
              >>=
              let pp_spec =
                Staged.unstage
-                 (Pp_spec.pped_modules_map preprocess (Lazy.force ocaml.version))
+                 (Pp_spec.pped_modules_map
+                    preprocess
+                    (Dune_rules__Ocaml_toolchain.version ocaml))
              in
              Modules.map_user_written ~f:(fun m -> Memo.return (pp_spec m))
            in
            let+ foreign_objects =
              Dir_contents.foreign_sources dir_contents
              >>| Foreign_sources.for_lib ~name
-             >>| (let ext_obj = (Lazy.force ocaml.lib_config).ext_obj in
+             >>| (let ext_obj = (Dune_rules__Ocaml_toolchain.lib_config ocaml).ext_obj in
                   let dir = Obj_dir.obj_dir (Lib.Local.obj_dir vlib) in
                   Foreign.Sources.object_files ~ext_obj ~dir)
              >>| List.map ~f:Path.build

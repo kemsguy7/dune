@@ -379,7 +379,10 @@ let make
   let+ ocaml = Context.ocaml (Super_context.context sctx) in
   let preprocess =
     Module_name.Per_item.map preprocess ~f:(fun pp ->
-      Preprocess.remove_future_syntax ~for_:Compiler pp (Lazy.force ocaml.version))
+      Preprocess.remove_future_syntax
+        ~for_:Compiler
+        pp
+        (Dune_rules__Ocaml_toolchain.version ocaml))
   in
   let preprocessor_deps, sandbox = Dep_conf_eval.unnamed preprocessor_deps ~expander in
   let sandbox =

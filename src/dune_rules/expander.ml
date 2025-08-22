@@ -215,7 +215,7 @@ let cc t =
       Foreign_language.Dict.get cc language
     and+ c_compiler =
       let+ ocaml = Action_builder.of_memo @@ Context.ocaml t.context in
-      Ocaml_config.c_compiler (Lazy.force ocaml.ocaml_config)
+      Ocaml_config.c_compiler (Dune_rules__Ocaml_toolchain.ocaml_config ocaml)
     in
     strings (c_compiler :: cc)
   in
@@ -514,7 +514,7 @@ let expand_pform_var (context : Context.t) ~dir ~source (var : Pform.Var.t) =
   | Dev_null -> path Dev_null.path |> Memo.return |> static
   | Ocaml_stdlib_dir | Ext_obj | Ext_lib | Ext_dll | Ccomp_type ->
     (let+ ocaml = ocaml in
-     lib_config_var var (Lazy.force ocaml.lib_config))
+     lib_config_var var (Dune_rules__Ocaml_toolchain.lib_config ocaml))
     |> static
   | Ext_exe
   | Cpp
@@ -528,7 +528,7 @@ let expand_pform_var (context : Context.t) ~dir ~source (var : Pform.Var.t) =
   | System
   | Model ->
     (let+ ocaml = ocaml in
-     ocaml_config_var var (Lazy.force ocaml.ocaml_config))
+     ocaml_config_var var (Dune_rules__Ocaml_toolchain.ocaml_config ocaml))
     |> static
   | Ignoring_promoted_rules ->
     string_of_bool !Clflags.ignore_promoted_rules |> string |> Memo.return |> static
@@ -567,7 +567,7 @@ let ocaml_config_macro source macro_invocation context =
   let open Memo.O in
   let+ ocaml_config =
     let+ ocaml = Context.ocaml context in
-    Lazy.force ocaml.ocaml_config
+    Dune_rules__Ocaml_toolchain.ocaml_config ocaml
   in
   match Ocaml_config.by_name ocaml_config s with
   | None ->

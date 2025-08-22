@@ -658,7 +658,7 @@ let setup_separate_compilation_rules sctx components =
          | "stdlib" ->
            let+ lib_config =
              let+ ocaml = Context.ocaml ctx in
-             Lazy.force ocaml.lib_config
+             Dune_rules__Ocaml_toolchain.lib_config ocaml
            in
            let archive =
              let stdlib_dir = lib_config.stdlib_dir in

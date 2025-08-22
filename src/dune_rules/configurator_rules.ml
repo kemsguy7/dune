@@ -13,7 +13,7 @@ let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.
   let ocaml_and_ocaml_config_vars =
     Action_builder.map ocaml ~f:(fun (ocaml : Ocaml_toolchain.t) ->
       ( Path.to_absolute_filename (Action.Prog.ok_exn ocaml.ocamlc)
-      , Ocaml_config.Vars.to_list (Lazy.force ocaml.ocaml_config_vars) ))
+      , Ocaml_config.Vars.to_list (Dune_rules__Ocaml_toolchain.ocaml_config_vars ocaml) ))
   in
   let* () =
     let fn = configurator_v1 ctx in

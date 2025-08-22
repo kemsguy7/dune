@@ -39,7 +39,7 @@ let cctx_rules cctx =
           ~direct_libs:non_compile_libs
           ~hidden_libs:[]
           (Lib_mode.Ocaml Byte)
-          (Lazy.force (Compilation_context.ocaml cctx).lib_config)
+          (Dune_rules__Ocaml_toolchain.lib_config (Compilation_context.ocaml cctx))
     in
     (* Indexing depends (recursively) on [required_compile] libs:
        - These libs's cmt files should be built before indexing starts

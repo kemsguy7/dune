@@ -1183,7 +1183,9 @@ let fallback_artifacts
   | Some index ->
     let+ mods =
       let* ocaml = Context.ocaml ctx in
-      let stdlib_dir = (Lazy.force ocaml.lib_config).Lib_config.stdlib_dir in
+      let stdlib_dir =
+        (Dune_rules__Ocaml_toolchain.lib_config ocaml).Lib_config.stdlib_dir
+      in
       let cmti_path =
         match location with
         | Absolute d -> d

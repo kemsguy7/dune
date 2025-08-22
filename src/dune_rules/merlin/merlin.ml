@@ -589,7 +589,10 @@ module Unprocessed = struct
     let open Action_builder.O in
     let* ocaml = Action_builder.of_memo (Context.ocaml ctx) in
     match
-      Preprocess.remove_future_syntax preprocess ~for_:Merlin (Lazy.force ocaml.version)
+      Preprocess.remove_future_syntax
+        preprocess
+        ~for_:Merlin
+        (Dune_rules__Ocaml_toolchain.version ocaml)
     with
     | Action (loc, (action : Dune_lang.Action.t)) ->
       pp_flag_of_action ~expander ~loc ~action

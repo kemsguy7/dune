@@ -132,7 +132,7 @@ let build_cm
        obj_dir
        m
        ~kind:(Ocaml Cmx)
-       ~ext:(Lazy.force ocaml.lib_config).ext_obj
+       ~ext:(Dune_rules__Ocaml_toolchain.lib_config ocaml).ext_obj
    in
    let open Memo.O in
    let* extra_args, extra_deps, other_targets =
@@ -198,7 +198,9 @@ let build_cm
          let annots =
            [ "-bin-annot" ]
            @
-           if Version.supports_bin_annot_occurrences (Lazy.force ocaml.version)
+           if
+             Version.supports_bin_annot_occurrences
+               (Dune_rules__Ocaml_toolchain.version ocaml)
            then [ "-bin-annot-occurrences" ]
            else []
          in
@@ -209,7 +211,9 @@ let build_cm
      let intf_only = cm_kind = Ocaml Cmi && not (Module.has m ~ml_kind:Impl) in
      if
        opaque
-       || (intf_only && Ocaml.Version.supports_opaque_for_mli (Lazy.force ocaml.version))
+       || (intf_only
+           && Ocaml.Version.supports_opaque_for_mli
+                (Dune_rules__Ocaml_toolchain.version ocaml))
      then A "-opaque"
      else Command.Args.empty
    in
@@ -299,8 +303,8 @@ let build_module ?(force_write_cmi = false) ?(precompiled_cmi = false) cctx m =
         let ctx = Compilation_context.context cctx in
         let ocaml = Compilation_context.ocaml cctx in
         let can_split =
-          Ocaml.Version.supports_split_at_emit (Lazy.force ocaml.version)
-          || Ocaml_config.is_dev_version (Lazy.force ocaml.ocaml_config)
+          Ocaml.Version.supports_split_at_emit (Dune_rules__Ocaml_toolchain.version ocaml)
+          || Ocaml_config.is_dev_version (Dune_rules__Ocaml_toolchain.ocaml_config ocaml)
         in
         match Context.fdo_target_exe ctx, can_split with
         | None, _ -> build_cm ~cm_kind:(Ocaml Cmx) ~phase:None

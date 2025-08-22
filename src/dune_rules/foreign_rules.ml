@@ -55,7 +55,7 @@ let foreign_flags_env =
         let+ ocaml = Context.ocaml context in
         default_context_flags
           (Context.build_context context)
-          (Lazy.force ocaml.ocaml_config)
+          (Dune_rules__Ocaml_toolchain.ocaml_config ocaml)
           ~project)
       ~f:(fun ~parent expander (env : Dune_env.config) ->
         let+ parent = parent in
@@ -90,7 +90,7 @@ let foreign_flags t ~dir ~expander ~flags ~language =
            let context = Super_context.context t in
            Context.ocaml context
          in
-         Lib_config.cc_g (Lazy.force ocaml.lib_config))
+         Lib_config.cc_g (Dune_rules__Ocaml_toolchain.lib_config ocaml))
     in
     let+ l =
       let standard = default_foreign_flags ~dir ~language in
@@ -232,7 +232,7 @@ let build_c
        | Some true -> Fdo.c_flags ctx
        | None | Some false ->
          (* In dune < 2.8 flags from ocamlc_config are always added *)
-         let cfg = Lazy.force ocaml.ocaml_config in
+         let cfg = Dune_rules__Ocaml_toolchain.ocaml_config ocaml in
          List.concat
            [ Ocaml_config.ocamlc_cflags cfg
            ; Ocaml_config.ocamlc_cppflags cfg
@@ -292,7 +292,7 @@ let build_c
       foreign_flags sctx ~dir ~expander ~flags ~language:kind
   in
   let output_param =
-    match (Lazy.force ocaml.lib_config).ccomp_type with
+    match (Dune_rules__Ocaml_toolchain.lib_config ocaml).ccomp_type with
     | Msvc -> [ Command.Args.Concat ("", [ A "/Fo"; Target dst ]) ]
     | Cc | Other _ -> [ A "-o"; Target dst ]
   in
@@ -309,13 +309,13 @@ let build_c
          ~loc:None
          ~dir
          sctx
-         (Ocaml_config.c_compiler (Lazy.force ocaml.ocaml_config))
+         (Ocaml_config.c_compiler (Dune_rules__Ocaml_toolchain.ocaml_config ocaml))
      in
      Command.run_dyn_prog
        ~dir:(Path.build dir)
        c_compiler
        ([ Command.Args.dyn with_user_and_std_flags
-        ; S [ A "-I"; Path (Lazy.force ocaml.lib_config).stdlib_dir ]
+        ; S [ A "-I"; Path (Dune_rules__Ocaml_toolchain.lib_config ocaml).stdlib_dir ]
         ; include_flags
         ]
         @ output_param
@@ -362,7 +362,7 @@ let build_o_files
       let ctx = Super_context.context sctx in
       Context.ocaml ctx
     in
-    (Lazy.force ocaml.lib_config).ext_obj
+    (Dune_rules__Ocaml_toolchain.lib_config ocaml).ext_obj
   in
   Foreign.Sources.to_list_map
     foreign_sources

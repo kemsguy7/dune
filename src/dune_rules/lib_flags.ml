@@ -211,9 +211,9 @@ module L = struct
         Action_builder.of_memo
           Memo.O.(
             let+ ocaml = Super_context.context sctx |> Context.ocaml in
-            ocaml.lib_config)
+            Dune_rules__Ocaml_toolchain.lib_config ocaml)
       in
-      to_iflags (c_include_paths ts (Lazy.force lib_config))
+      to_iflags (c_include_paths ts lib_config)
     in
     Command.Args.S [ Dyn local; Hidden_deps external_; Dyn include_flags ]
   ;;

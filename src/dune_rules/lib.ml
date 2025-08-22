@@ -1961,7 +1961,7 @@ module DB = struct
     create_from_findlib
       findlib
       ~has_bigarray_library:
-        (Ocaml.Version.has_bigarray_library (Lazy.force ocaml.version))
+        (Ocaml.Version.has_bigarray_library (Dune_rules__Ocaml_toolchain.version ocaml))
       ~instrument_with:(Context.instrument_with context)
   ;;
 

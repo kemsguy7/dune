@@ -172,7 +172,7 @@ let build_info_code cctx ~libs ~api_version =
 |ocaml};
   let fmt_eval : _ format6 =
     let ocaml = Compilation_context.ocaml cctx in
-    if Ocaml.Version.has_sys_opaque_identity (Lazy.force ocaml.version)
+    if Ocaml.Version.has_sys_opaque_identity (Dune_rules__Ocaml_toolchain.version ocaml)
     then "let %s = eval (Sys.opaque_identity %S)"
     else "let %s = eval %S"
   in
