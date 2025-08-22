@@ -48,13 +48,13 @@ let term =
           let+ requires = Resolve.read_memo requires
           and+ lib_config =
             let+ ocaml = Context.ocaml context in
-            ocaml.lib_config
+            Dune_rules__Ocaml_toolchain.lib_config ocaml
           and+ env = Super_context.context_env sctx in
           env, lib_config, Path.to_string utop_target, requires))
   in
   Hooks.End_of_build.run ();
   let env =
-    Dune_rules.Lib_flags.L.toplevel_ld_paths requires (Lazy.force lib_config)
+    Dune_rules.Lib_flags.L.toplevel_ld_paths requires lib_config
     |> Path.Set.fold
          ~f:(fun dir env -> Env_path.cons ~var:Ocaml.Env.caml_ld_library_path env ~dir)
          ~init:env
