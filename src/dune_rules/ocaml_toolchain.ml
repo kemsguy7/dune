@@ -16,6 +16,12 @@ type t =
   ; lib_config : Lib_config.t Lazy.t
   }
 
+(* Getter functions for lazy fields *)
+let ocaml_config t = Lazy.force t.ocaml_config
+let ocaml_config_vars t = Lazy.force t.ocaml_config_vars
+let version t = Lazy.force t.version
+let lib_config t = Lazy.force t.lib_config
+
 let make_builtins ~ocaml_config ~version =
   Memo.Lazy.create (fun () ->
     let stdlib_dir =
@@ -159,21 +165,21 @@ let of_binaries ~path name env binaries =
 (* Seems wrong to support this at the level of the engine. This is easily
    implemented at the level of the rules and is noly needed for windows *)
 let register_response_file_support t =
-  if Ocaml.Version.supports_response_file (Lazy.force t.version)
+  if Ocaml.Version.supports_response_file (version t)
   then (
     let set prog = Response_file.set ~prog (Zero_terminated_strings "-args0") in
     Result.iter t.ocaml ~f:set;
     set (Action.Prog.ok_exn t.ocamlc);
     Result.iter t.ocamlopt ~f:set;
     Result.iter t.ocamldep ~f:set;
-    if Ocaml.Version.ocamlmklib_supports_response_file (Lazy.force t.version)
+    if Ocaml.Version.ocamlmklib_supports_response_file (version t)
     then Result.iter ~f:set t.ocamlmklib)
 ;;
 
-let check_fdo_support { version; lib_config; ocaml_config; _ } name =
-  let lib_config = Lazy.force lib_config in
+let check_fdo_support t name =
+  let lib_config = lib_config t in
   let has_native = lib_config.has_native in
-  let version_string = Ocaml_config.version_string (Lazy.force ocaml_config) in
+  let version_string = Ocaml_config.version_string (ocaml_config t) in
   let err () =
     User_error.raise
       [ Pp.textf
@@ -183,16 +189,16 @@ let check_fdo_support { version; lib_config; ocaml_config; _ } name =
       ]
   in
   if not has_native then err ();
-  if Ocaml_config.is_dev_version (Lazy.force ocaml_config)
+  if Ocaml_config.is_dev_version (ocaml_config t)
   then
     ( (* Allows fdo to be invoked with any dev version of the compiler. This is
          experimental and will be removed when ocamlfdo is fully integrated into
          the toolchain. When using a dev version of ocamlopt that does not
          support the required options, fdo builds will fail because the compiler
          won't recognize the options. Normals builds won't be affected. *) )
-  else if not (Ocaml.Version.supports_split_at_emit (Lazy.force version))
+  else if not (Ocaml.Version.supports_split_at_emit (version t))
   then
-    if not (Ocaml.Version.supports_function_sections (Lazy.force version))
+    if not (Ocaml.Version.supports_function_sections (version t))
     then err ()
     else
       User_warning.emit

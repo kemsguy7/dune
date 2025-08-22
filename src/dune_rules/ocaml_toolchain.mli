@@ -17,6 +17,12 @@ type t =
   ; lib_config : Lib_config.t Lazy.t
   }
 
+(** Getter functions to access lazy fields *)
+val ocaml_config : t -> Ocaml_config.t
+val ocaml_config_vars : t -> Ocaml_config.Vars.t
+val version : t -> Ocaml.Version.t
+val lib_config : t -> Lib_config.t
+
 val of_env_with_findlib
   :  Context_name.t
   -> Env.t
