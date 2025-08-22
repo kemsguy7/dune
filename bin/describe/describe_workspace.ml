@@ -409,13 +409,13 @@ module Crawl = struct
       let* pp_map =
         let+ version =
           let+ ocaml = Super_context.context sctx |> Context.ocaml in
-          ocaml.version
+          Dune_rules__Ocaml_toolchain.version ocaml
         in
         Staged.unstage
         @@ Pp_spec.pped_modules_map
              (Dune_lang.Preprocess.Per_module.without_instrumentation
                 exes.buildable.preprocess)
-             (Lazy.force version)
+             version
       in
       let deps_of module_ =
         let module_ = pp_map module_ in
@@ -478,13 +478,13 @@ module Crawl = struct
           let* pp_map =
             let+ version =
               let+ ocaml = Super_context.context sctx |> Context.ocaml in
-              ocaml.version
+              Dune_rules__Ocaml_toolchain.version ocaml
             in
             Staged.unstage
             @@ Pp_spec.pped_modules_map
                  (Dune_lang.Preprocess.Per_module.without_instrumentation
                     (Lib_info.preprocess info))
-                 (Lazy.force version)
+                 version
           in
           let deps_of module_ =
             immediate_deps_of_module
