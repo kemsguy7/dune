@@ -9,21 +9,23 @@ let configurator_v2 t = Path.Build.relative (dot_dune_dir t) "configurator.v2"
    runtime. Ideally, this should be created on-demand if we run a program linked
    against configurator, however we currently don't support this kind of
    "runtime dependencies" so we just do it eagerly. *)
-let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.t) =
-  let ocaml_and_ocaml_config_vars =
+let gen_rules (ctx : Build_context.t) (_ocaml : Ocaml_toolchain.t Action_builder.t) =
+  (* let _ocaml_and_ocaml_config_vars1 =
     Action_builder.map ocaml ~f:(fun (ocaml : Ocaml_toolchain.t) ->
       ( Path.to_absolute_filename (Action.Prog.ok_exn ocaml.ocamlc)
       , Ocaml_config.Vars.to_list (Dune_rules__Ocaml_toolchain.ocaml_config_vars ocaml) ))
-  in
+  in *)
   let* () =
     let fn = configurator_v1 ctx in
     (let open Action_builder.O in
-     let+ ocamlc, ocaml_config_vars = ocaml_and_ocaml_config_vars in
+     (* let+ ocamlc, ocaml_config_vars = ocaml_and_ocaml_config_vars in *)
+     let+ () = Action_builder.return () in
      (let open Dune_lang.Encoder in
       record_fields
-        [ field "ocamlc" string ocamlc
+        (* [ field "ocamlc" string ocamlc
         ; field_l "ocaml_config_vars" (pair string string) ocaml_config_vars
-        ])
+        ]) *)
+        [])
      |> List.map ~f:(fun x -> Dune_lang.to_string x ^ "\n")
      |> String.concat ~sep:""
      |> Action.write_file fn
@@ -33,21 +35,24 @@ let gen_rules (ctx : Build_context.t) (ocaml : Ocaml_toolchain.t Action_builder.
   in
   let fn = configurator_v2 ctx in
   (let open Action_builder.O in
-   let+ ocamlc, ocaml_config_vars = ocaml_and_ocaml_config_vars in
+   (* let+ () ocamlc, ocaml_config_vars = ocaml_and_ocaml_config_vars in *)
+   let+ () = Action_builder.return () in
    (let open Sexp in
     let ocaml_config_vars =
-      Sexp.List (List.map ocaml_config_vars ~f:(fun (k, v) -> List [ Atom k; Atom v ]))
+      (* Sexp.List (List.map ocaml_config_vars ~f:(fun (k, v) -> List [ Atom k; Atom v ])) *)
+      Sexp.List []
     in
     List
-      [ List [ Atom "ocamlc"; Atom ocamlc ]
-      ; List [ Atom "ocaml_config_vars"; ocaml_config_vars ]
-      ])
+      (* [ List [ Atom "ocamlc"; Atom ocamlc ] *)
+      [ List []; List [ Atom "ocaml_config_vars"; ocaml_config_vars ] ])
    |> Csexp.to_string
    |> Action.write_file fn
    |> Action.Full.make)
   |> Rule.make ~targets:(Targets.File.create fn)
   |> Rules.Produce.rule
 ;;
+
+(* Memo.return () *)
 
 let force_files =
   Memo.lazy_ ~name:"force-configuration-files" (fun () ->

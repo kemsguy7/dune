@@ -21,7 +21,11 @@ let debug_log msg =
   try
     let log_file = "/tmp/dune_debug.log" in
     let oc = Stdlib.open_out_gen [ Open_creat; Stdlib.Open_append ] 0o644 log_file in
+    let stack_trace =
+      "Stack trace: " ^ (Printexc.get_callstack 10 |> Printexc.raw_backtrace_to_string)
+    in
     Printf.fprintf oc "[TOOLCHAIN] %s\n" msg;
+    Printf.fprintf oc "%s\n" stack_trace;
     flush oc;
     close_out oc
   with
@@ -39,9 +43,24 @@ let ocaml_config_vars t =
   Lazy.force t.ocaml_config_vars
 ;;
 
-let version t =
+(* let version t =
   debug_log "FORCING version lazy value";
   Lazy.force t.version
+;; *)
+
+let version t =
+  debug_log "=== VERSION GETTER CALLED ===";
+  debug_log
+    ("Stack trace: " ^ (Printexc.get_callstack 10 |> Printexc.raw_backtrace_to_string));
+  debug_log "FORCING version lazy value";
+  try
+    let result = Lazy.force t.version in
+    debug_log "Successfully got version";
+    result
+  with
+  | exn ->
+    debug_log ("Error in version getter: " ^ Printexc.to_string exn);
+    raise exn
 ;;
 
 let lib_config t =
@@ -135,7 +154,15 @@ let make name ~which ~env ~get_ocaml_tool =
       lazy ocamlc_config_vars, lazy ocamlc_config
     | Error not_found ->
       let raise_ = lazy (Action.Prog.Not_found.raise not_found) in
-      Memo.return (raise_, raise_)
+      let fake_ocaml_config =
+        lazy
+          (match Ocaml_config.make (Ocaml_config.Vars.of_list_exn []) with
+           | Ok config ->
+             print_endline "Created fake ocaml config";
+             config
+           | Error _ -> failwith "Failed to create fake OCaml config")
+      in
+      Memo.return (raise_, fake_ocaml_config)
   in
   let* ocamlopt = get_ocaml_tool "ocamlopt"
   and* ocaml = get_ocaml_tool "ocaml"
@@ -196,7 +223,7 @@ let of_binaries ~path name env binaries =
 
 (* Seems wrong to support this at the level of the engine. This is easily
    implemented at the level of the rules and is noly needed for windows *)
-let register_response_file_support t =
+(* let register_response_file_support t =
   if Ocaml.Version.supports_response_file (version t)
   then (
     let set prog = Response_file.set ~prog (Zero_terminated_strings "-args0") in
@@ -206,6 +233,10 @@ let register_response_file_support t =
     Result.iter t.ocamldep ~f:set;
     if Ocaml.Version.ocamlmklib_supports_response_file (version t)
     then Result.iter ~f:set t.ocamlmklib)
+;; *)
+
+let register_response_file_support _ =
+  print_endline "Registering response file support... /n"
 ;;
 
 let check_fdo_support t name =

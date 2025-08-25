@@ -420,7 +420,7 @@ let ext_lib _t =
   let open Vars.Ocamlc_config_getters in
   get vars "ext_lib"
 ;;  *)
-(* REPLACE your getter functions with these corrected versions *)
+
 let version _t =
   let vars = get_computed_field "version" in
   (* Changed from get_hardcoded_field *)
