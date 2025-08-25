@@ -1,5 +1,6 @@
 open Import
 open Memo.O
+module Unix_ops = Unix
 
 type t =
   { bin_dir : Action.Prog.t
@@ -16,11 +17,42 @@ type t =
   ; lib_config : Lib_config.t Lazy.t
   }
 
+let debug_log msg =
+  try
+    let log_file = "/tmp/dune_debug.log" in
+    let oc = Stdlib.open_out_gen [ Open_creat; Stdlib.Open_append ] 0o644 log_file in
+    Printf.fprintf oc "[TOOLCHAIN] %s\n" msg;
+    flush oc;
+    close_out oc
+  with
+  | _ -> Printf.printf "Not found in chain"
+;;
+
 (* Getter functions for lazy fields *)
-let ocaml_config t = Lazy.force t.ocaml_config
-let ocaml_config_vars t = Lazy.force t.ocaml_config_vars
-let version t = Lazy.force t.version
-let lib_config t = Lazy.force t.lib_config
+let ocaml_config t =
+  debug_log "Forcing ocaml_config lazy value";
+  Lazy.force t.ocaml_config
+;;
+
+let ocaml_config_vars t =
+  debug_log "FORCING ocaml_config_vars lazy value";
+  Lazy.force t.ocaml_config_vars
+;;
+
+let version t =
+  debug_log "FORCING version lazy value";
+  Lazy.force t.version
+;;
+
+let lib_config t =
+  debug_log "FORCING lib_config lazy value";
+  Lazy.force t.lib_config
+;;
+
+(*
+   let ocaml_config_vars t = Lazy.force t.ocaml_config_vars *)
+(* let version t = Lazy.force t.version
+let lib_config t = Lazy.force t.lib_config *)
 
 let make_builtins ~ocaml_config ~version =
   Memo.Lazy.create (fun () ->
