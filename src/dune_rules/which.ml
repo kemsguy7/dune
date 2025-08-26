@@ -2,7 +2,7 @@ open Import
 open Memo.O
 
 let programs_for_which_we_prefer_opt_ext =
-  [ "ocamlc"; "ocamldep"; "ocamlmklib"; "ocamlobjinfo"; "ocamlopt" ]
+  [ "ocamlc6"; "ocamldep"; "ocamlmklib"; "ocamlobjinfo"; "ocamlopt" ]
 ;;
 
 let with_opt p = p ^ ".opt"

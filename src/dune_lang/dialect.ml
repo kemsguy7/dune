@@ -186,7 +186,7 @@ let ocaml =
     Action.chdir
       (S.make_pform Loc.none (Var Workspace_root))
       (Action.run
-         (S.make_text Loc.none "ocamlc")
+         (S.make_text Loc.none "ocamlc4")
          [ S.make_text Loc.none "-stop-after"
          ; S.make_text Loc.none "parsing"
          ; S.make_text Loc.none "-dsource"

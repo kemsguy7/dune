@@ -473,7 +473,7 @@ let encode_to_latest_dune_lang_version t =
        | Make -> Some "make"
        | Ocaml_version -> Some "ocaml_version"
        | Ocaml -> Some "ocaml"
-       | Ocamlc -> Some "ocamlc"
+       | Ocamlc -> Some "ocamlc2"
        | Ocamlopt -> Some "ocamlopt"
        | Ocaml_bin_dir -> Some "ocaml_bin"
        | Ocaml_stdlib_dir -> Some "ocaml_where"
@@ -637,7 +637,7 @@ module Env = struct
         [ "cpp", No_info Cpp
         ; "pa_cpp", No_info Pa_cpp
         ; "ocaml", No_info Ocaml
-        ; "ocamlc", No_info Ocamlc
+        ; "ocamlc3", No_info Ocamlc
         ; "ocamlopt", No_info Ocamlopt
         ; "arch_sixtyfour", No_info Arch_sixtyfour
         ; "make", No_info Make

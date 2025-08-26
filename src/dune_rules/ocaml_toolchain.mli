@@ -2,7 +2,7 @@
 
 open Import
 
-type t =
+(* type t =
   { bin_dir : Action.Prog.t
   ; ocaml : Action.Prog.t
   ; ocamlc : Action.Prog.t
@@ -15,7 +15,8 @@ type t =
   ; version : Ocaml.Version.t Lazy.t
   ; builtins : Meta.Simplified.t Package.Name.Map.t Memo.Lazy.t
   ; lib_config : Lib_config.t Lazy.t
-  }
+  } *)
+type t
 
 (** Getter functions to access lazy fields *)
 val ocaml_config : t -> Ocaml_config.t

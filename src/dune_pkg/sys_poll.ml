@@ -236,7 +236,7 @@ let make ~path =
     make_lazy (fun () -> os_family ~os_release_fields ~os_distribution ~os)
   in
   let sys_ocaml_version =
-    make_lazy (fun () -> run_capture_line ~path ~prog:"ocamlc" ~args:[ "-vnum" ])
+    make_lazy (fun () -> run_capture_line ~path ~prog:"ocamlc2" ~args:[ "-vnum" ])
   in
   { arch; os; os_version; os_distribution; os_family; sys_ocaml_version }
 ;;
